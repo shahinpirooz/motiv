@@ -50,6 +50,7 @@ pub mod anthropic;
 pub mod groq;
 pub mod openrouter;
 pub mod parakeet_engine;
+pub mod chat; // Motiv: chat with a meeting
 pub mod rich_export; // fork: rich-text export / email
 pub mod state;
 pub mod summary;
@@ -857,6 +858,9 @@ pub fn run() {
             api::open_external_url,
             rich_export::rich_export_open_eml, // fork
             rich_export::rich_export_open_mailto, // fork
+            chat::api_chat_with_meeting,
+            chat::api_get_meeting_chat,
+            chat::api_clear_meeting_chat,
             // Custom OpenAI commands
             api::api_save_custom_openai_config,
             api::api_get_custom_openai_config,
