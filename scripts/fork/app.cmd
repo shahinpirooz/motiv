@@ -33,7 +33,7 @@ for /f "tokens=3 delims= " %%v in ('"C:\Program Files\LLVM\bin\clang.exe" --vers
   for /f "tokens=1 delims=." %%m in ("%%v") do set "CLANG_MAJOR=%%m"
 )
 if defined CLANG_MAJOR if !CLANG_MAJOR! GEQ 20 (
-  echo LLVM !CLANG_MAJOR! is too new for Meetily's Whisper bindings. Install LLVM 18:
+  echo LLVM !CLANG_MAJOR! is too new for Motiv's Whisper bindings. Install LLVM 18:
   echo   winget uninstall LLVM.LLVM
   echo   winget install LLVM.LLVM --version 18.1.8
   echo then: cd "%ROOT%" ^&^& cargo clean -p whisper-rs-sys --release

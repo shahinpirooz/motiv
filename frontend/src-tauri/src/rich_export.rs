@@ -14,7 +14,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-const DRAFT_DIR: &str = "meetily-email-drafts";
+const DRAFT_DIR: &str = "motiv-email-drafts";
 const MAX_MAILTO_LEN: usize = 8000;
 const MAX_EML_BYTES: usize = 20 * 1024 * 1024;
 

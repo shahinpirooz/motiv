@@ -1,8 +1,9 @@
-# Meetily with rich-text export
+# Motiv
 
 Based on [Zackriya-Solutions/meetily](https://github.com/Zackriya-Solutions/meetily)
 Community Edition v0.5.0 (MIT). Split from upstream at that release and
-maintained independently. It adds rich-text export to the meeting summary.
+maintained independently as Motiv, a personal project. It adds rich-text
+export to the meeting summary.
 
 ## What it adds
 

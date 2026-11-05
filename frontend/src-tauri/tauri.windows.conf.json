@@ -9,7 +9,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/shahinpirooz/meetily/releases/latest/download/latest.json"
+        "https://github.com/shahinpirooz/motiv/releases/latest/download/latest.json"
       ]
     }
   }

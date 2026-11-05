@@ -146,7 +146,7 @@ impl WhisperEngine {
                 dirs::data_dir()
                     .or_else(|| dirs::home_dir())
                     .ok_or_else(|| anyhow!("Could not find system data directory"))?
-                    .join("Meetily")
+                    .join("Motiv")
                     .join("models")
             }
         };
@@ -1023,7 +1023,7 @@ impl WhisperEngine {
         }
 
         let client = Client::builder()
-            .user_agent(concat!("Meetily/", env!("CARGO_PKG_VERSION")))
+            .user_agent(concat!("Motiv/", env!("CARGO_PKG_VERSION")))
             .build()
             .map_err(|e| anyhow!("Failed to create download client: {}", e))?;
         let response = tokio::select! {
@@ -1536,7 +1536,7 @@ mod tests {
 
         assert!(error.to_string().contains("too small"));
         assert!(request.to_ascii_lowercase().contains(&format!(
-            "user-agent: meetily/{}",
+            "user-agent: motiv/{}",
             env!("CARGO_PKG_VERSION")
         )));
         assert!(!engine.active_downloads.lock().await.contains_key("tiny"));

@@ -110,7 +110,7 @@ function rfc2822Date(d: Date): string {
  * An unsent MIME message (multipart/alternative: plain + HTML).
  * "X-Unsent: 1" makes Outlook open it as an editable draft with Send enabled.
  */
-export function buildEml(content: EmailContent, boundary = `----=_meetily_${Date.now().toString(36)}`): string {
+export function buildEml(content: EmailContent, boundary = `----=_motiv_${Date.now().toString(36)}`): string {
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${content.html}</body></html>`;
   const headers = [
     'MIME-Version: 1.0',

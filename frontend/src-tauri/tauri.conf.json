@@ -1,8 +1,8 @@
 {
     "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-    "productName": "meetily",
+    "productName": "Motiv",
     "version": "0.5.0",
-    "identifier": "com.meetily.ai",
+    "identifier": "com.pirooz.motiv",
     "build": {
         "frontendDist": "../out",
         "devUrl": "http://localhost:3118",
@@ -12,7 +12,7 @@
     "app": {
         "windows": [
             {
-                "title": "meetily",
+                "title": "Motiv",
                 "width": 1100,
                 "height": 700,
                 "resizable": true,
@@ -81,10 +81,10 @@
     "bundle": {
         "active": true,
         "shortDescription": "Privacy-first AI meeting assistant",
-        "longDescription": "Meetily Community Edition is a free, open-source AI meeting assistant. Record meetings, transcribe audio locally and create AI summaries using local models or a provider you choose. Your recordings and transcripts stay on your device.",
+        "longDescription": "Motiv is a personal, open-source AI meeting assistant based on Meetily Community Edition. Record meetings, transcribe audio locally and create AI summaries using local models or a provider you choose. Your recordings and transcripts stay on your device.",
         "category": "Productivity",
-        "publisher": "Meetily",
-        "homepage": "https://meetily.ai",
+        "publisher": "Shahin Pirooz",
+        "homepage": "https://github.com/shahinpirooz/motiv",
         "targets": [
             "deb",
             "appimage",
