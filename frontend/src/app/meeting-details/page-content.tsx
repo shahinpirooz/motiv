@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { TranscriptPanel } from '@/components/MeetingDetails/TranscriptPanel';
 import { SummaryPanel } from '@/components/MeetingDetails/SummaryPanel';
 import { ChatPanel } from '@/components/MeetingDetails/ChatPanel';
+import { ActionsPanel } from '@/components/MeetingDetails/ActionsPanel';
 import { InsightsPane } from '@/components/MeetingDetails/InsightsPane';
 import { MeetingDetailsSplitView, type MeetingDetailsTab } from '@/components/MeetingDetails/MeetingDetailsSplitView';
 import { ModelConfig } from '@/components/ModelSettingsModal';
@@ -255,6 +256,13 @@ export default function PageContent({
               isModelConfigLoading={isModelConfigLoading}
               onOpenModelSettings={handleRegisterModalOpen}
             />
+              }
+              actions={
+                <ActionsPanel
+                  meetingId={meeting.id}
+                  modelConfig={modelConfig}
+                  hasTranscripts={(totalCount ?? meetingData.transcripts.length) > 0}
+                />
               }
               chat={
                 <ChatPanel
