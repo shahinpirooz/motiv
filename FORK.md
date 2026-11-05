@@ -1,7 +1,8 @@
-# Meetily fork: rich-text export
+# Meetily with rich-text export
 
-This fork of [Zackriya-Solutions/meetily](https://github.com/Zackriya-Solutions/meetily)
-adds rich-text export to the meeting summary. Everything else is upstream Meetily.
+Based on [Zackriya-Solutions/meetily](https://github.com/Zackriya-Solutions/meetily)
+Community Edition v0.5.0 (MIT). Split from upstream at that release and
+maintained independently. It adds rich-text export to the meeting summary.
 
 ## What it adds
 
@@ -35,40 +36,31 @@ New files (never conflict with upstream):
 | `frontend/src/components/MeetingDetails/SummaryExportButtons.tsx` | The Copy as / Email buttons |
 | `frontend/src-tauri/src/rich_export.rs` | Opens the .eml draft or mailto link with the default mail app |
 | `frontend/tests/lib/rich-export.test.tsx`, `frontend/tests/components/summary-export-buttons.test.tsx` | Tests |
-| `scripts/fork/*`, `.github/workflows/fork-sync-upstream.yml`, `FORK.md` | Fork maintenance |
+| `scripts/fork/*`, `FORK.md` | Build, test and docs |
 
-Small insertions into upstream files (the only possible merge conflicts),
-each marked `fork`:
+Small insertions into upstream files, each marked `fork`:
 
 | File | Change |
 | --- | --- |
 | `frontend/src/components/MeetingDetails/SummaryPanel.tsx` | 1 import + render `<SummaryExportButtons>` |
 | `frontend/src-tauri/src/lib.rs` | `pub mod rich_export;` + 2 lines in `generate_handler!` |
 
-If upstream reorganizes those two spots, re-add the marked lines where the
-equivalent code now lives.
-
 ## Branches
 
-- `main`: an exact mirror of upstream. Never commit to it.
-- `rich-export`: upstream plus the fork's commits. The repo's default branch,
-  and the one you build from.
+- `main`: the project's code. Build from it.
+- Tags `vX.Y.Z` mark releases. `v0.5.0` is upstream v0.5.0 plus this
+  project's changes.
 
-## Staying current with upstream
+## Taking a fix from upstream
 
-**Automatic (weekly):** `.github/workflows/fork-sync-upstream.yml`
-fast-forwards `main`, merges it into a `sync/upstream-<version>` branch, runs
-the fork tests, and opens a pull request into `rich-export`. Merge it when it
-says tests passed. It needs the `SYNC_TOKEN` secret (see setup below).
-
-**Manual, any time:**
+This project no longer tracks upstream. To bring in a specific upstream fix:
 
 ```bash
-scripts/fork/sync-upstream.sh          # fast-forward main, merge into rich-export, test, push
+git remote add upstream https://github.com/Zackriya-Solutions/meetily.git
+git fetch upstream
+git cherry-pick <commit>
+scripts/fork/test-fork.sh
 ```
-
-If git reports conflicts, fix the listed files (keep upstream's changes and
-re-add the `fork` lines), then `git add … && git commit && scripts/fork/test-fork.sh && git push`.
 
 ## Tests
 
@@ -80,7 +72,7 @@ scripts/fork/test-fork.sh --rust     # + Rust unit tests for rich_export.rs (com
 ## Building
 
 Install the platform prerequisites from upstream's `docs/BUILDING.md` plus
-Rust (https://rustup.rs), then from the `rich-export` branch:
+Rust (https://rustup.rs), then from `main`:
 
 ```bash
 scripts/fork/app.sh dev      # run in development mode
@@ -99,8 +91,3 @@ which turn off two upstream-only settings:
 - signed updater artifacts (the signing key belongs to upstream)
 - updates from upstream's releases (the fork checks its own releases, so it
   never replaces itself with plain Meetily)
-
-## Giving it back
-
-The fork is small and self-contained. If upstream accepts it as a pull
-request, the fork is no longer needed.
