@@ -13,6 +13,15 @@ pub enum MeetingApp {
 }
 
 impl MeetingApp {
+    /// Short name for prompts and titles ("Teams meeting detected").
+    pub fn short_label(self) -> &'static str {
+        match self {
+            MeetingApp::Zoom => "Zoom",
+            MeetingApp::Teams => "Teams",
+            MeetingApp::Meet => "Google Meet",
+        }
+    }
+
     pub fn label(self) -> &'static str {
         match self {
             MeetingApp::Zoom => "Zoom",

@@ -192,10 +192,12 @@ fn show_prompt<R: Runtime>(app: &AppHandle<R>, kind: PromptKind, d: &Detected) {
     let url = format!(
         "meeting-prompt.html?kind={}&app={}&title={}",
         match kind { PromptKind::Start => "start", PromptKind::Stop => "stop" },
-        query_escape(d.app.label()),
+        query_escape(d.app.short_label()),
         query_escape(d.title.as_deref().unwrap_or("")),
     );
-    let (w, h) = (380.0, 132.0);
+    // The card is drawn by the page (rounded corners + shadow), so the window
+    // itself is transparent, undecorated and a little larger than the card.
+    let (w, h) = (420.0, 168.0);
     let mut builder = WebviewWindowBuilder::new(app, PROMPT_LABEL, WebviewUrl::App(url.into()))
         .title("Motiv")
         .inner_size(w, h)
@@ -204,12 +206,14 @@ fn show_prompt<R: Runtime>(app: &AppHandle<R>, kind: PromptKind, d: &Detected) {
         .always_on_top(true)
         .skip_taskbar(true)
         .focused(false)
+        .transparent(true)
+        .shadow(false)
         .visible_on_all_workspaces(true);
     if let Ok(Some(m)) = app.primary_monitor() {
         let scale = m.scale_factor();
         let size = m.size().to_logical::<f64>(scale);
         let pos = m.position().to_logical::<f64>(scale);
-        builder = builder.position(pos.x + size.width - w - 16.0, pos.y + 40.0);
+        builder = builder.position(pos.x + size.width - w - 8.0, pos.y + 32.0);
     }
     if let Err(e) = builder.build() {
         warn!("meeting watch: could not open popup: {}", e);
@@ -227,7 +231,7 @@ fn recording_title(d: &Detected) -> String {
     let when = chrono::Local::now().format("%Y-%m-%d %H:%M");
     match &d.title {
         Some(t) => format!("{} ({})", t, when),
-        None => format!("{} meeting {}", d.app.label(), when),
+        None => format!("{} meeting {}", d.app.short_label(), when),
     }
 }
 
@@ -372,6 +376,8 @@ mod tests {
     fn recording_titles() {
         let t = recording_title(&Detected { app: detect::MeetingApp::Zoom, title: None });
         assert!(t.starts_with("Zoom meeting "));
+        let t = recording_title(&Detected { app: detect::MeetingApp::Teams, title: None });
+        assert!(t.starts_with("Teams meeting "));
         let t = recording_title(&Detected { app: detect::MeetingApp::Meet, title: Some("Roadmap".into()) });
         assert!(t.starts_with("Roadmap ("));
     }
