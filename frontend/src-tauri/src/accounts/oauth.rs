@@ -38,8 +38,12 @@ impl Provider {
 pub fn scopes(provider: Provider, teams_attendance: bool) -> String {
     match provider {
         Provider::Microsoft => {
-            let mut s = vec!["offline_access", "openid", "profile", "email", "User.Read", "Calendars.Read", "OnlineMeetings.Read"];
+            // Calendars.Read works for work and personal Microsoft accounts.
+            // The Teams meeting/attendance scopes are work-only and usually
+            // need admin approval, so they're opt-in.
+            let mut s = vec!["offline_access", "openid", "profile", "email", "User.Read", "Calendars.Read"];
             if teams_attendance {
+                s.push("OnlineMeetings.Read");
                 s.push("OnlineMeetingArtifact.Read.All");
             }
             s.join(" ")
@@ -319,6 +323,7 @@ mod tests {
         });
         assert!(g.contains("access_type=offline") && g.contains("calendar.readonly"));
         assert!(!scopes(Provider::Microsoft, false).contains("Artifact"));
+        assert!(!scopes(Provider::Microsoft, false).contains("OnlineMeetings"));
     }
 
     #[test]

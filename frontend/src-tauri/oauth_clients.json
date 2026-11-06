@@ -1,0 +1,11 @@
+{
+  "_comment": "Motiv's built-in OAuth app registrations (public client IDs, not secrets). Fill these in once; users then just click Connect. See docs/CALENDAR_SETUP.md. A Google Desktop-app client secret is not confidential and belongs here too.",
+  "microsoft": {
+    "client_id": "",
+    "tenant": "common"
+  },
+  "google": {
+    "client_id": "",
+    "client_secret": ""
+  }
+}

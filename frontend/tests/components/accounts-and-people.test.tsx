@@ -57,30 +57,43 @@ const event = (id: string, title: string, platform: string | null = "teams") => 
 beforeEach(() => {
   invokes.length = 0; toasts.length = 0; attendanceError = null;
   status = [
-    { provider: "microsoft", label: "Microsoft 365", config: cfg(), connected: false },
-    { provider: "google", label: "Google", config: cfg({ tenant: "" }), connected: false },
+    { provider: "microsoft", label: "Microsoft 365", config: cfg({ tenant: "", teams_attendance: false }), connected: false, built_in: true },
+    { provider: "google", label: "Google", config: cfg({ tenant: "" }), connected: false, built_in: false },
   ];
   calendar = { connected: true, link: { meeting_id: "m1", event: event("e1", "Weekly Planning"), attendance: null, source: "auto" }, candidates: [event("e1", "Weekly Planning"), event("e2", "Standup", null)] };
 });
 
 describe("AccountsSettings", () => {
-  test("connect saves the client ID first, then signs in", async () => {
+  test("with a built-in registration, Connect works without entering anything", async () => {
     const r = await render(<AccountsSettings />);
-    await act(async () => byLabel(r, "Microsoft 365 client ID").props.onChange({ target: { value: "abc-123" } }));
     const ms = r.root.find((n: any) => n.props["data-testid"] === "provider-microsoft");
-    await act(async () => { await buttonWith(r, "Connect", ms).props.onClick(); });
+    expect(text(r)).not.toContain("Microsoft 365 client ID");
+    await act(async () => { await buttonWith(r, "Connect Microsoft 365", ms).props.onClick(); });
+    expect(invokes.some((c) => c.cmd === "accounts_save_config")).toBe(false);
+    expect(invokes.find((c) => c.cmd === "accounts_connect")?.args).toEqual({ provider: "microsoft" });
+    expect(text(r)).toContain("me@whitedog.com");
+  });
+
+  test("own registration under Advanced is saved before connecting", async () => {
+    const r = await render(<AccountsSettings />);
+    const ms = r.root.find((n: any) => n.props["data-testid"] === "provider-microsoft");
+    await act(async () => { buttonWith(r, "Advanced", ms).props.onClick(); });
+    await act(async () => byLabel(r, "Microsoft 365 client ID").props.onChange({ target: { value: "abc-123" } }));
+    await act(async () => { await buttonWith(r, "Connect Microsoft 365", ms).props.onClick(); });
     const names = invokes.map((c) => c.cmd);
     expect(names.indexOf("accounts_save_config")).toBeLessThan(names.indexOf("accounts_connect"));
     expect(invokes.find((c) => c.cmd === "accounts_save_config")?.args.config.client_id).toBe("abc-123");
-    expect(text(r)).toContain("me@whitedog.com");
-    expect(toasts).toContain("ok:Microsoft 365 connected");
   });
 
-  test("connect is disabled without a client ID; Google asks for a secret", async () => {
+  test("without a built-in registration, Advanced is open and Connect needs IDs", async () => {
     const r = await render(<AccountsSettings />);
     const g = r.root.find((n: any) => n.props["data-testid"] === "provider-google");
-    expect(buttonWith(r, "Connect", g).props.disabled).toBe(true);
-    expect(byLabel(r, "Google client secret").props.type).toBe("password");
+    expect(textOf(g)).toContain("no built-in Google app registration");
+    expect(buttonWith(r, "Connect Google", g).props.disabled).toBe(true);
+    await act(async () => byLabel(r, "Google client ID").props.onChange({ target: { value: "g" } }));
+    expect(buttonWith(r, "Connect Google", g).props.disabled).toBe(true);
+    await act(async () => byLabel(r, "Google client secret").props.onChange({ target: { value: "s" } }));
+    expect(buttonWith(r, "Connect Google", g).props.disabled).toBe(false);
   });
 });
 

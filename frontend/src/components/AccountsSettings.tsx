@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
-import { CheckCircle2, ExternalLink, Loader2 } from 'lucide-react';
+import { CheckCircle2, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -25,6 +25,8 @@ export interface ProviderStatus {
   label: string;
   config: ProviderConfig;
   connected: boolean;
+  /** This copy of Motiv has a built-in app registration for the provider. */
+  built_in: boolean;
 }
 
 const GUIDE_URL = 'https://github.com/shahinpirooz/motiv/blob/main/docs/CALENDAR_SETUP.md';
@@ -50,8 +52,8 @@ export function AccountsSettings() {
         <h3 className="text-lg font-semibold">Calendars &amp; participants</h3>
         <p className="mt-1 text-sm text-gray-600">
           Connect your calendars so Motiv names recordings after the meeting, knows who was invited, and (for Teams
-          meetings you organise) who actually attended. Sign-in happens in your browser; tokens stay in this
-          computer&apos;s keychain. Each service needs a one-time app registration that you own.
+          meetings you organise) who actually attended. You sign in in your browser; Motiv only reads, and the
+          sign-in stays in this computer&apos;s keychain.
         </p>
         <button
           type="button"
@@ -72,6 +74,9 @@ function ProviderCard({ status, onChange }: { status: ProviderStatus; onChange: 
   const [cfg, setCfg] = useState<ProviderConfig>(status.config);
   const [busy, setBusy] = useState<'save' | 'connect' | 'disconnect' | null>(null);
   const isMs = status.provider === 'microsoft';
+  const custom = cfg.client_id.trim().length > 0;
+  const canConnect = status.built_in || (custom && (isMs || cfg.client_secret.trim().length > 0));
+  const [advanced, setAdvanced] = useState(!status.built_in || Boolean(status.config.client_id));
   const dirty = JSON.stringify(cfg) !== JSON.stringify(status.config);
 
   useEffect(() => { setCfg(status.config); }, [status.config]);
@@ -121,36 +126,6 @@ function ProviderCard({ status, onChange }: { status: ProviderStatus; onChange: 
         )}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label={isMs ? 'Application (client) ID' : 'Client ID'}>
-          <Input
-            value={cfg.client_id}
-            onChange={(e) => setCfg({ ...cfg, client_id: e.target.value })}
-            placeholder={isMs ? '00000000-0000-0000-0000-000000000000' : '1234-abc.apps.googleusercontent.com'}
-            aria-label={`${status.label} client ID`}
-          />
-        </Field>
-        {isMs ? (
-          <Field label="Tenant">
-            <Input
-              value={cfg.tenant}
-              onChange={(e) => setCfg({ ...cfg, tenant: e.target.value })}
-              placeholder="organizations"
-              aria-label="Microsoft tenant"
-            />
-          </Field>
-        ) : (
-          <Field label="Client secret">
-            <Input
-              type="password"
-              value={cfg.client_secret}
-              onChange={(e) => setCfg({ ...cfg, client_secret: e.target.value })}
-              aria-label="Google client secret"
-            />
-          </Field>
-        )}
-      </div>
-
       {isMs && (
         <label className="flex items-start gap-2 text-sm text-gray-700">
           <input
@@ -161,22 +136,78 @@ function ProviderCard({ status, onChange }: { status: ProviderStatus; onChange: 
             aria-label="Teams attendance reports"
           />
           <span>
-            Teams attendance reports (who actually joined). Needs the OnlineMeetingArtifact.Read.All permission,
-            which an admin usually has to approve. Reconnect after changing this.
+            Also read Teams attendance reports (who actually joined). Work accounts only, and your organisation&apos;s
+            admin usually has to approve it. Reconnect after changing this.
           </span>
         </label>
       )}
 
+      {!canConnect && (
+        <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          This copy of Motiv has no built-in {status.label} app registration yet. Add one under Advanced (see the
+          setup guide).
+        </p>
+      )}
+
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => run('connect')} disabled={!cfg.client_id.trim() || busy !== null}>
+        <Button onClick={() => run('connect')} disabled={!canConnect || busy !== null}>
           {busy === 'connect' && <Loader2 className="h-4 w-4 animate-spin" />}
-          {busy === 'connect' ? 'Waiting for browser…' : status.connected ? 'Reconnect' : 'Connect'}
+          {busy === 'connect' ? 'Waiting for browser…' : status.connected ? 'Reconnect' : `Connect ${status.label}`}
         </Button>
         {dirty && (
           <Button variant="outline" onClick={() => run('save')} disabled={busy !== null}>Save</Button>
         )}
         {status.connected && (
           <Button variant="ghost" onClick={() => run('disconnect')} disabled={busy !== null}>Disconnect</Button>
+        )}
+      </div>
+
+      <div className="border-t border-gray-100 pt-3">
+        <button
+          type="button"
+          onClick={() => setAdvanced((v) => !v)}
+          className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-900"
+          aria-expanded={advanced}
+        >
+          <ChevronRight className={`h-3.5 w-3.5 transition-transform ${advanced ? 'rotate-90' : ''}`} />
+          Advanced: use your own app registration
+        </button>
+        {advanced && (
+          <div className="mt-3 space-y-3">
+            <p className="text-xs text-gray-500">
+              Leave empty to use Motiv&apos;s built-in registration. Some organisations require their own; see the
+              setup guide.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label={isMs ? 'Application (client) ID' : 'Client ID'}>
+                <Input
+                  value={cfg.client_id}
+                  onChange={(e) => setCfg({ ...cfg, client_id: e.target.value })}
+                  placeholder={status.built_in ? 'Built-in' : isMs ? '00000000-0000-0000-0000-000000000000' : '1234-abc.apps.googleusercontent.com'}
+                  aria-label={`${status.label} client ID`}
+                />
+              </Field>
+              {isMs ? (
+                <Field label="Tenant">
+                  <Input
+                    value={cfg.tenant}
+                    onChange={(e) => setCfg({ ...cfg, tenant: e.target.value })}
+                    placeholder="organizations"
+                    aria-label="Microsoft tenant"
+                  />
+                </Field>
+              ) : (
+                <Field label="Client secret">
+                  <Input
+                    type="password"
+                    value={cfg.client_secret}
+                    onChange={(e) => setCfg({ ...cfg, client_secret: e.target.value })}
+                    aria-label="Google client secret"
+                  />
+                </Field>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -21,11 +21,13 @@ const KEYCHAIN_SERVICE: &str = "Motiv";
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct ProviderConfig {
-    /// Application (client) ID of the user's app registration.
+    /// Advanced: client ID of the user's own app registration. Empty = use
+    /// the registration built into Motiv.
     pub client_id: String,
     /// Google "Desktop app" clients come with a (non-confidential) secret.
     pub client_secret: String,
-    /// Microsoft only: "organizations" (work accounts), "common", or a tenant ID.
+    /// Microsoft only, with your own registration: "organizations", "common",
+    /// or a tenant ID/domain. Empty = "organizations".
     pub tenant: String,
     /// Microsoft only: also read Teams attendance reports (needs admin consent).
     pub teams_attendance: bool,
@@ -55,9 +57,63 @@ impl AccountsConfig {
     }
 }
 
-pub fn tenant(cfg: &ProviderConfig) -> String {
-    let t = cfg.tenant.trim();
-    if t.is_empty() { "organizations".into() } else { t.to_string() }
+/// App registrations built into this copy of Motiv (`oauth_clients.json`).
+#[derive(Debug, Clone, Default, Deserialize, PartialEq)]
+#[serde(default)]
+pub struct BuiltIn {
+    pub client_id: String,
+    pub client_secret: String,
+    pub tenant: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(default)]
+struct BuiltInFile {
+    microsoft: BuiltIn,
+    google: BuiltIn,
+}
+
+pub fn parse_built_in(json: &str) -> (BuiltIn, BuiltIn) {
+    let f: BuiltInFile = serde_json::from_str(json).unwrap_or_default();
+    (f.microsoft, f.google)
+}
+
+static BUILT_IN: LazyLock<(BuiltIn, BuiltIn)> = LazyLock::new(|| parse_built_in(include_str!("../../oauth_clients.json")));
+
+pub fn built_in(p: Provider) -> &'static BuiltIn {
+    match p {
+        Provider::Microsoft => &BUILT_IN.0,
+        Provider::Google => &BUILT_IN.1,
+    }
+}
+
+/// The registration actually used: the user's own (Advanced) if they entered
+/// a client ID, otherwise the one built into Motiv.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Effective {
+    pub client_id: String,
+    pub client_secret: String,
+    pub tenant: String,
+    pub custom: bool,
+}
+
+pub fn effective(p: Provider, user: &ProviderConfig, built: &BuiltIn) -> Effective {
+    let custom = !user.client_id.trim().is_empty();
+    let (client_id, client_secret, tenant) = if custom {
+        (user.client_id.trim(), user.client_secret.trim(), user.tenant.trim())
+    } else {
+        (built.client_id.trim(), built.client_secret.trim(), built.tenant.trim())
+    };
+    let tenant = match p {
+        Provider::Microsoft if tenant.is_empty() => if custom { "organizations" } else { "common" }.to_string(),
+        Provider::Microsoft => tenant.to_string(),
+        Provider::Google => String::new(),
+    };
+    Effective { client_id: client_id.to_string(), client_secret: client_secret.to_string(), tenant, custom }
+}
+
+fn effective_for<R: Runtime>(app: &AppHandle<R>, p: Provider) -> Effective {
+    effective(p, load_config(app).get(p), built_in(p))
 }
 
 fn config_path<R: Runtime>(app: &AppHandle<R>) -> Option<PathBuf> {
@@ -65,13 +121,10 @@ fn config_path<R: Runtime>(app: &AppHandle<R>) -> Option<PathBuf> {
 }
 
 pub fn load_config<R: Runtime>(app: &AppHandle<R>) -> AccountsConfig {
-    let mut c: AccountsConfig = config_path(app)
+    let c: AccountsConfig = config_path(app)
         .and_then(|p| std::fs::read_to_string(p).ok())
         .and_then(|j| serde_json::from_str(&j).ok())
         .unwrap_or_default();
-    if c.microsoft.tenant.is_empty() {
-        c.microsoft.tenant = "organizations".into();
-    }
     c
 }
 
@@ -161,8 +214,8 @@ pub async fn access_token<R: Runtime>(app: &AppHandle<R>, p: Provider) -> Result
     let cfg = load_config(app);
     let pc = cfg.get(p);
     let scope = stored.scope.clone().unwrap_or_else(|| oauth::scopes(p, pc.teams_attendance));
-    let tenant = tenant(pc);
-    let client = oauth::Client { provider: p, tenant: &tenant, client_id: &pc.client_id, client_secret: Some(&pc.client_secret) };
+    let eff = effective_for(app, p);
+    let client = oauth::Client { provider: p, tenant: &eff.tenant, client_id: &eff.client_id, client_secret: Some(&eff.client_secret) };
     match client.refresh(&refresh, &scope).await {
         Ok(t) => {
             store::write(app, p, &t)?;
@@ -195,6 +248,18 @@ pub struct ProviderStatus {
     pub label: &'static str,
     pub config: ProviderConfig,
     pub connected: bool,
+    /// This copy of Motiv has a built-in registration for the provider.
+    pub built_in: bool,
+}
+
+fn status_of<R: Runtime>(app: &AppHandle<R>, cfg: &AccountsConfig, p: Provider) -> ProviderStatus {
+    ProviderStatus {
+        provider: p,
+        label: p.label(),
+        config: cfg.get(p).clone(),
+        connected: is_connected(app, p),
+        built_in: !built_in(p).client_id.trim().is_empty(),
+    }
 }
 
 #[tauri::command]
@@ -202,7 +267,7 @@ pub fn accounts_status<R: Runtime>(app: AppHandle<R>) -> Vec<ProviderStatus> {
     let cfg = load_config(&app);
     [Provider::Microsoft, Provider::Google]
         .into_iter()
-        .map(|p| ProviderStatus { provider: p, label: p.label(), config: cfg.get(p).clone(), connected: is_connected(&app, p) })
+        .map(|p| status_of(&app, &cfg, p))
         .collect()
 }
 
@@ -226,13 +291,17 @@ pub fn accounts_save_config<R: Runtime>(app: AppHandle<R>, provider: Provider, c
 pub async fn accounts_connect<R: Runtime>(app: AppHandle<R>, provider: Provider) -> Result<ProviderStatus, String> {
     let mut cfg = load_config(&app);
     let pc = cfg.get(provider).clone();
-    if pc.client_id.is_empty() {
-        return Err(format!("Enter the {} application (client) ID first.", provider.label()));
+    let eff = effective(provider, &pc, built_in(provider));
+    if eff.client_id.is_empty() {
+        return Err(format!(
+            "This copy of Motiv has no built-in {} app registration. Add one under Advanced (see the setup guide).",
+            provider.label()
+        ));
     }
-    if provider == Provider::Google && pc.client_secret.is_empty() {
-        return Err("Enter the Google client secret first.".into());
+    if provider == Provider::Google && eff.client_secret.is_empty() {
+        return Err("The Google client secret is missing. Add it under Advanced (see the setup guide).".into());
     }
-    let tenant = tenant(&pc);
+    let tenant = eff.tenant.clone();
     let scope = oauth::scopes(provider, pc.teams_attendance);
     let (verifier, challenge) = oauth::pkce_pair();
     let state = oauth::random_state();
@@ -241,7 +310,7 @@ pub async fn accounts_connect<R: Runtime>(app: AppHandle<R>, provider: Provider)
     let url = oauth::authorize_url(&oauth::AuthRequest {
         provider,
         tenant: &tenant,
-        client_id: &pc.client_id,
+        client_id: &eff.client_id,
         redirect_uri: &redirect,
         scope: &scope,
         state: &state,
@@ -252,7 +321,7 @@ pub async fn accounts_connect<R: Runtime>(app: AppHandle<R>, provider: Provider)
     if got_state != state {
         return Err("Sign-in response did not match this request. Try again.".into());
     }
-    let client = oauth::Client { provider, tenant: &tenant, client_id: &pc.client_id, client_secret: Some(&pc.client_secret) };
+    let client = oauth::Client { provider, tenant: &tenant, client_id: &eff.client_id, client_secret: Some(&eff.client_secret) };
     let mut tokens = client.exchange_code(&code, &verifier, &redirect, &scope).await?;
     if tokens.scope.is_none() {
         tokens.scope = Some(scope);
@@ -264,7 +333,7 @@ pub async fn accounts_connect<R: Runtime>(app: AppHandle<R>, provider: Provider)
     cfg.get_mut(provider).account = account;
     save_config(&app, &cfg)?;
     crate::calendar::invalidate_cache();
-    Ok(ProviderStatus { provider, label: provider.label(), config: cfg.get(provider).clone(), connected: true })
+    Ok(status_of(&app, &cfg, provider))
 }
 
 #[tauri::command]
@@ -297,11 +366,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn config_defaults_and_tenant() {
+    fn config_defaults() {
         let c: AccountsConfig = serde_json::from_str(r#"{"google":{"client_id":"g"}}"#).unwrap();
         assert_eq!(c.google.client_id, "g");
-        assert_eq!(tenant(&c.microsoft), "organizations");
-        let pc = ProviderConfig { tenant: " contoso.onmicrosoft.com ".into(), ..Default::default() };
-        assert_eq!(tenant(&pc), "contoso.onmicrosoft.com");
+        assert!(!c.microsoft.teams_attendance);
+    }
+
+    #[test]
+    fn built_in_file_parses() {
+        let (ms, g) = parse_built_in(include_str!("../../oauth_clients.json"));
+        assert_eq!(ms.tenant, "common");
+        assert_eq!(g.client_secret, g.client_secret.trim());
+        let (ms, g) = parse_built_in(r#"{"microsoft":{"client_id":"m"},"google":{"client_id":"g","client_secret":"s"}}"#);
+        assert_eq!((ms.client_id.as_str(), g.client_secret.as_str()), ("m", "s"));
+    }
+
+    #[test]
+    fn effective_prefers_user_registration() {
+        let built = BuiltIn { client_id: "builtin".into(), client_secret: String::new(), tenant: String::new() };
+        let none = ProviderConfig::default();
+        let e = effective(Provider::Microsoft, &none, &built);
+        assert_eq!((e.client_id.as_str(), e.tenant.as_str(), e.custom), ("builtin", "common", false));
+        let mine = ProviderConfig { client_id: " mine ".into(), tenant: "contoso.com".into(), ..Default::default() };
+        let e = effective(Provider::Microsoft, &mine, &built);
+        assert_eq!((e.client_id.as_str(), e.tenant.as_str(), e.custom), ("mine", "contoso.com", true));
+        let mine = ProviderConfig { client_id: "mine".into(), ..Default::default() };
+        assert_eq!(effective(Provider::Microsoft, &mine, &built).tenant, "organizations");
+        assert_eq!(effective(Provider::Google, &none, &BuiltIn::default()).client_id, "");
     }
 }
