@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <!-- Motiv app icon: microphone wearing over-ear headphones -->
+  <!-- Motiv app icon: a smiling microphone pill wearing over-ear headphones -->
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#4F46E5"/>
@@ -11,21 +11,14 @@
     </linearGradient>
   </defs>
   <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)"/>
-  <g transform="translate(512 512) scale(1.18) translate(-512 -521)">
-  <!-- headband over the top -->
-    <path d="M358 500 V436 A154 154 0 0 1 666 436 V500" fill="none" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round"/>
-    <!-- microphone capsule -->
+  <g transform="translate(512 512) scale(1.32) translate(-512 -432)">
+    <!-- headband over the top -->
+    <path d="M358 430 V404 A154 154 0 0 1 666 404 V430" fill="none" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round"/>
+    <!-- microphone pill with a smile -->
     <rect x="417" y="318" width="190" height="300" rx="95" fill="#FFFFFF"/>
-    <g stroke="#6D5AE6" stroke-width="16" stroke-linecap="round" opacity="0.55">
-      <line x1="462" y1="408" x2="562" y2="408"/>
-      <line x1="462" y1="454" x2="562" y2="454"/>
-      <line x1="462" y1="500" x2="562" y2="500"/>
-    </g>
+    <path d="M464 494 Q512 548 560 494" fill="none" stroke="#6D5AE6" stroke-width="20" stroke-linecap="round"/>
     <!-- ear cups -->
-    <rect x="314" y="452" width="88" height="168" rx="40" fill="url(#cup)"/>
-    <rect x="622" y="452" width="88" height="168" rx="40" fill="url(#cup)"/>
-    <!-- stand -->
-    <line x1="512" y1="618" x2="512" y2="726" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round"/>
-    <line x1="420" y1="746" x2="604" y2="746" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round"/>
+    <rect x="314" y="352" width="88" height="130" rx="40" fill="url(#cup)"/>
+    <rect x="622" y="352" width="88" height="130" rx="40" fill="url(#cup)"/>
   </g>
 </svg>

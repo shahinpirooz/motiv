@@ -197,7 +197,7 @@ fn show_prompt<R: Runtime>(app: &AppHandle<R>, kind: PromptKind, d: &Detected) {
     );
     // The card is drawn by the page (rounded corners + shadow), so the window
     // itself is transparent, undecorated and a little larger than the card.
-    let (w, h) = (420.0, 168.0);
+    let (w, h) = (404.0, 140.0);
     let mut builder = WebviewWindowBuilder::new(app, PROMPT_LABEL, WebviewUrl::App(url.into()))
         .title("Motiv")
         .inner_size(w, h)
@@ -213,7 +213,7 @@ fn show_prompt<R: Runtime>(app: &AppHandle<R>, kind: PromptKind, d: &Detected) {
         let scale = m.scale_factor();
         let size = m.size().to_logical::<f64>(scale);
         let pos = m.position().to_logical::<f64>(scale);
-        builder = builder.position(pos.x + size.width - w - 8.0, pos.y + 32.0);
+        builder = builder.position(pos.x + size.width - w - 12.0, pos.y + 36.0);
     }
     if let Err(e) = builder.build() {
         warn!("meeting watch: could not open popup: {}", e);
