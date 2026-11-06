@@ -273,7 +273,16 @@ pub async fn meeting_prompt_respond<R: Runtime>(app: AppHandle<R>, action: Strin
 async fn on_event<R: Runtime>(app: &AppHandle<R>, ev: Event, settings: &Settings) {
     let recording = crate::audio::recording_commands::is_recording().await;
     match ev {
-        Event::Started(d) => {
+        Event::Started(mut d) => {
+            // Prefer the calendar event's name when a matching event is on now.
+            let platform = match d.app {
+                detect::MeetingApp::Zoom => "zoom",
+                detect::MeetingApp::Teams => "teams",
+                detect::MeetingApp::Meet => "meet",
+            };
+            if let Some(event) = crate::calendar::current_event(app, Some(platform)).await {
+                d.title = Some(event.title);
+            }
             info!("meeting watch: {} call started", d.app.label());
             {
                 let mut st = STATE.lock().unwrap();

@@ -495,6 +495,13 @@ impl SummaryService {
             info!("📝 Detected transcript summary language: {}", code);
         }
 
+        // Motiv: tell the model who was in the meeting (from the calendar)
+        let custom_prompt = match crate::calendar::participants_for_prompt(&pool, &meeting_id).await {
+            Some(note) if custom_prompt.trim().is_empty() => note,
+            Some(note) => format!("{}\n\n{}", custom_prompt, note),
+            None => custom_prompt,
+        };
+
         let template = match templates::get_template(&template_id) {
             Ok(template) => template,
             Err(e) => {

@@ -462,7 +462,10 @@ pub async fn api_chat_with_meeting<R: Runtime>(
         .map(|m| rough_token_count(&m.content))
         .sum();
     let transcript = select_context(&lines, &question, budget.saturating_sub(history_tokens).max(500));
-    let user_prompt = build_user_prompt(&title, &transcript, &history, &question);
+    let mut user_prompt = build_user_prompt(&title, &transcript, &history, &question);
+    if let Some(note) = crate::calendar::participants_for_prompt(&pool, &meeting_id).await {
+        user_prompt = format!("{}\n\n{}", note, user_prompt);
+    }
 
     info!(
         "chat: asking {} ({} transcript lines, ~{} prompt tokens)",

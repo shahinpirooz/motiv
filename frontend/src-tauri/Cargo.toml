@@ -136,6 +136,8 @@ bytes = { version = "1.9.0", features = ["serde"] }
 esaxx-rs = "0.1.10"
 symphonia = { version = "0.5.4", features = ["aac", "isomp4", "mp3", "flac", "ogg", "vorbis", "pcm", "wav", "opt-simd"] }
 rand = "0.8.5"
+base64 = "0.22"  # Motiv: OAuth PKCE
+sha2 = "0.10"  # Motiv: OAuth PKCE
 rayon = "1.10"
 rubato = "0.15.0"
 ringbuf = "0.4.8"
@@ -169,6 +171,7 @@ time = { version = "0.3", features = ["formatting"] }
 reqwest = { version = "0.11", features = ["multipart", "json"] }
 core-graphics = "0.23"
 core-foundation = "0.9"  # Motiv: meeting awareness (window titles)
+keyring = { version = "3", features = ["apple-native"] }  # Motiv: account tokens in Keychain
 cidre = { git = "https://github.com/yury/cidre", rev = "a9587fa", features = ["av"] }
 dasp = "0.11.0"
 futures-channel = "0.3.31"
@@ -186,6 +189,7 @@ whisper-rs = { version = "0.13.2", features = ["raw-api", "metal", "coreml"] }
 [target.'cfg(target_os = "windows")'.dependencies]
 # Motiv: meeting awareness (window titles, microphone in-use registry)
 windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_Registry"] }
+keyring = { version = "3", features = ["windows-native"] }  # Motiv: account tokens in Credential Manager
 whisper-rs = { version = "0.13.2", features = ["raw-api"] }
 ort = { version = "2.0.0-rc.10", features = ["load-dynamic"] }
 futures-channel = "0.3.31"

@@ -228,13 +228,15 @@ pub async fn api_generate_meeting_insights<R: Runtime>(
     let settings = load_provider_settings(&pool, &model).await?;
     let budget = context_budget(&settings, &model_name).await;
     let parts = split_lines(&lines, budget);
+    let participants = crate::calendar::participants_for_prompt(&pool, &meeting_id).await;
     info!("insights: {} transcript lines in {} part(s) for {}", lines.len(), parts.len(), model_name);
 
     let mut results = Vec::new();
     for (i, part) in parts.iter().enumerate() {
         let user = format!(
-            "Meeting: {}{}\n\n<transcript>\n{}\n</transcript>",
+            "Meeting: {}{}{}\n\n<transcript>\n{}\n</transcript>",
             title,
+            participants.as_deref().map(|n| format!("\n{}", n)).unwrap_or_default(),
             if parts.len() > 1 { format!(" (part {} of {})", i + 1, parts.len()) } else { String::new() },
             part
         );

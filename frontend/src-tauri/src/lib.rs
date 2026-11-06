@@ -55,6 +55,8 @@ pub mod insights; // Motiv: action items and highlights
 pub mod meeting_watch; // Motiv: Zoom/Teams/Meet awareness
 pub mod storage; // Motiv: recordings folder and expiration
 pub mod vocabulary; // Motiv: names and terms spelled correctly
+pub mod accounts; // Motiv: Microsoft 365 / Google sign-in
+pub mod calendar; // Motiv: calendar events and participants
 pub mod rich_export; // fork: rich-text export / email
 pub mod state;
 pub mod summary;
@@ -888,6 +890,14 @@ pub fn run() {
             storage::storage_pick_folder,
             vocabulary::vocabulary_get,
             vocabulary::vocabulary_save,
+            accounts::accounts_status,
+            accounts::accounts_save_config,
+            accounts::accounts_connect,
+            accounts::accounts_disconnect,
+            calendar::calendar_upcoming,
+            calendar::calendar_for_meeting,
+            calendar::calendar_set_meeting_event,
+            calendar::calendar_refresh_attendance,
             // Custom OpenAI commands
             api::api_save_custom_openai_config,
             api::api_get_custom_openai_config,

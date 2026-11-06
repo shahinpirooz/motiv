@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { TranscriptPanel } from '@/components/MeetingDetails/TranscriptPanel';
 import { SummaryPanel } from '@/components/MeetingDetails/SummaryPanel';
 import { ActionsPanel } from '@/components/MeetingDetails/ActionsPanel';
+import { PeoplePanel } from '@/components/MeetingDetails/PeoplePanel';
 import { InsightsPane } from '@/components/MeetingDetails/InsightsPane';
 import { MeetingDetailsSplitView, type MeetingDetailsTab } from '@/components/MeetingDetails/MeetingDetailsSplitView';
 import { ModelConfig } from '@/components/ModelSettingsModal';
@@ -256,6 +257,7 @@ export default function PageContent({
               onOpenModelSettings={handleRegisterModalOpen}
             />
               }
+              people={<PeoplePanel meetingId={meeting.id} />}
               actions={
                 <ActionsPanel
                   meetingId={meeting.id}
