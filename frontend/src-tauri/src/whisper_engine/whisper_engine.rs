@@ -569,6 +569,11 @@ impl WhisperEngine {
         params.set_language(language_code);
         params.set_translate(should_translate);
 
+        // Motiv: bias recognition toward the user's names and terms
+        if let Some(prompt) = crate::vocabulary::whisper_prompt(&crate::vocabulary::terms()) {
+            params.set_initial_prompt(&prompt);
+        }
+
         // CRITICAL: Disable timestamp tokens to prevent whisper.cpp chunking heuristics
         // The "single timestamp ending - skip entire chunk" optimization incorrectly discards
         // complete, valid transcriptions. Disabling timestamps forces whisper to return ALL text.
@@ -682,6 +687,10 @@ impl WhisperEngine {
         };
         params.set_language(language_code);
         params.set_translate(should_translate);
+        // Motiv: bias recognition toward the user's names and terms
+        if let Some(prompt) = crate::vocabulary::whisper_prompt(&crate::vocabulary::terms()) {
+            params.set_initial_prompt(&prompt);
+        }
         params.set_no_timestamps(true);
         params.set_token_timestamps(true);
         params.set_print_special(false);

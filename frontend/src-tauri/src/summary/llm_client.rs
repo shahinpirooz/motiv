@@ -271,6 +271,10 @@ pub(crate) async fn generate_summary(
     app_data_dir: Option<&PathBuf>,
     cancellation_token: Option<&CancellationToken>,
 ) -> Result<LlmCompletion, String> {
+    // Motiv: correct spellings of names and terms in every prompt
+    let system_prompt_owned = crate::vocabulary::with_vocabulary(system_prompt);
+    let system_prompt: &str = &system_prompt_owned;
+
     // Check if cancelled before starting
     if let Some(token) = cancellation_token {
         if token.is_cancelled() {

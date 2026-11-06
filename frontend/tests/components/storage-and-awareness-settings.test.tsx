@@ -117,3 +117,10 @@ describe("MeetingAwarenessSettings", () => {
     expect(text(r)).not.toContain("When a call starts");
   });
 });
+
+describe("VocabularySettings", () => {
+  test("parseTerms splits lines, commas and semicolons", async () => {
+    const { parseTerms } = await import("../../src/components/VocabularySettings");
+    expect(parseTerms("Shahin Pirooz\n WhiteDog , OpenXDR;\n\n")).toEqual(["Shahin Pirooz", "WhiteDog", "OpenXDR"]);
+  });
+});

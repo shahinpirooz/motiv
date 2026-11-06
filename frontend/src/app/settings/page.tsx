@@ -12,6 +12,7 @@ import { SummaryModelSettings } from '@/components/SummaryModelSettings';
 import { BetaSettings } from '@/components/BetaSettings';
 import { MeetingAwarenessSettings } from '@/components/MeetingAwarenessSettings';
 import { StorageSettings } from '@/components/StorageSettings';
+import { VocabularySettings } from '@/components/VocabularySettings';
 import { useConfig } from '@/contexts/ConfigContext';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
@@ -115,6 +116,7 @@ export default function SettingsPage() {
 
             <TabsContent value="general">
               <PreferenceSettings />
+              <VocabularySettings />
             </TabsContent>
             <TabsContent value="recording">
               <RecordingSettings />

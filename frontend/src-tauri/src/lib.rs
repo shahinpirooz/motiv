@@ -54,6 +54,7 @@ pub mod chat; // Motiv: chat with a meeting
 pub mod insights; // Motiv: action items and highlights
 pub mod meeting_watch; // Motiv: Zoom/Teams/Meet awareness
 pub mod storage; // Motiv: recordings folder and expiration
+pub mod vocabulary; // Motiv: names and terms spelled correctly
 pub mod rich_export; // fork: rich-text export / email
 pub mod state;
 pub mod summary;
@@ -639,6 +640,8 @@ pub fn run() {
             meeting_watch::start(_app.handle().clone());
             // Motiv: recordings folder + automatic expiration of old audio
             storage::start(_app.handle().clone());
+            // Motiv: names and terms for prompts and Whisper
+            vocabulary::load(_app.handle());
 
             // Initialize notification system with proper defaults
             log::info!("Initializing notification system...");
@@ -880,6 +883,8 @@ pub fn run() {
             storage::storage_save_retention,
             storage::storage_cleanup_now,
             storage::storage_pick_folder,
+            vocabulary::vocabulary_get,
+            vocabulary::vocabulary_save,
             // Custom OpenAI commands
             api::api_save_custom_openai_config,
             api::api_get_custom_openai_config,
