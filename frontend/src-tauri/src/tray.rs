@@ -17,6 +17,16 @@ pub enum RecordingState {
     Stopping,
 }
 
+/// Motiv: monochrome template glyph in the macOS menu bar (adapts to light and
+/// dark menu bars); the full-colour app icon elsewhere.
+fn tray_icon<R: Runtime>(app: &AppHandle<R>) -> tauri::image::Image<'static> {
+    if cfg!(target_os = "macos") {
+        tauri::image::Image::new(include_bytes!("../icons/tray-template.rgba"), 44, 44)
+    } else {
+        app.default_window_icon().unwrap().clone().to_owned()
+    }
+}
+
 pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     // Start with default menu, will update with actual state after initialization
     // Pass can_record=true initially, will be updated by update_tray_menu immediately
@@ -25,7 +35,8 @@ pub fn create_tray<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     TrayIconBuilder::with_id("main-tray")
         .menu(&menu)
         .tooltip("Motiv")
-        .icon(app.default_window_icon().unwrap().clone())
+        .icon(tray_icon(app))
+        .icon_as_template(cfg!(target_os = "macos"))
         .on_menu_event(|app, event| handle_menu_event(app, event.id.as_ref()))
         .build(app)?;
 

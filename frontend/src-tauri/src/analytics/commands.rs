@@ -8,10 +8,12 @@ static ANALYTICS_CLIENT: std::sync::Mutex<Option<Arc<AnalyticsClient>>> = std::s
 
 #[command]
 pub async fn init_analytics() -> Result<(), String> {
+    // Motiv: usage analytics went to upstream Meetily's PostHog project.
+    // Disconnected: no key, disabled, so nothing is ever sent.
     let config = AnalyticsConfig {
-        api_key: "phc_ohznXPkRSJYWmrfez9mYxtXv5U5Nekq3iiUts87dJfcr".to_string(),
-        host: Some("https://us.i.posthog.com".to_string()),
-        enabled: true,
+        api_key: String::new(),
+        host: None,
+        enabled: false,
     };
     
     let client = Arc::new(AnalyticsClient::new(config).await);
