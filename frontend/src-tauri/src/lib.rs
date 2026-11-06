@@ -53,6 +53,7 @@ pub mod parakeet_engine;
 pub mod chat; // Motiv: chat with a meeting
 pub mod insights; // Motiv: action items and highlights
 pub mod meeting_watch; // Motiv: Zoom/Teams/Meet awareness
+pub mod storage; // Motiv: recordings folder and expiration
 pub mod rich_export; // fork: rich-text export / email
 pub mod state;
 pub mod summary;
@@ -636,6 +637,8 @@ pub fn run() {
 
             // Motiv: watch for Zoom / Teams / Google Meet calls
             meeting_watch::start(_app.handle().clone());
+            // Motiv: recordings folder + automatic expiration of old audio
+            storage::start(_app.handle().clone());
 
             // Initialize notification system with proper defaults
             log::info!("Initializing notification system...");
@@ -873,6 +876,10 @@ pub fn run() {
             meeting_watch::meeting_watch_save_settings,
             meeting_watch::meeting_watch_current,
             meeting_watch::meeting_prompt_respond,
+            storage::storage_report,
+            storage::storage_save_retention,
+            storage::storage_cleanup_now,
+            storage::storage_pick_folder,
             // Custom OpenAI commands
             api::api_save_custom_openai_config,
             api::api_get_custom_openai_config,

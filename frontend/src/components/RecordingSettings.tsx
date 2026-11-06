@@ -204,6 +204,7 @@ export function RecordingSettings({ onSave }: RecordingSettingsProps) {
             <div className="text-sm text-gray-600 mb-3 break-all">
               {preferences.save_folder || 'Default folder'}
             </div>
+            <p className="text-xs text-gray-500 mb-3">Change the folder or set automatic cleanup in the Storage tab.</p>
             <button
               onClick={handleOpenFolder}
               className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"

@@ -415,7 +415,10 @@ pub async fn set_recording_preferences<R: Runtime>(
 ) -> Result<(), String> {
     save_recording_preferences(&app, &preferences)
         .await
-        .map_err(|e| format!("Failed to save recording preferences: {}", e))
+        .map_err(|e| format!("Failed to save recording preferences: {}", e))?;
+    // Motiv: new recordings go to the chosen folder from now on
+    crate::storage::set_recordings_root(&preferences.save_folder);
+    Ok(())
 }
 
 #[tauri::command]

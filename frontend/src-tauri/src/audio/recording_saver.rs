@@ -223,7 +223,8 @@ impl RecordingSaver {
     /// * `create_checkpoints` - Whether to create .checkpoints/ directory and IncrementalAudioSaver
     fn initialize_meeting_folder(&mut self, meeting_name: &str, create_checkpoints: bool) -> Result<()> {
         // Load preferences to get base recordings folder
-        let base_folder = super::recording_preferences::get_default_recordings_folder();
+        // Motiv: honour the folder chosen in Recording settings
+        let base_folder = crate::storage::recordings_root();
 
         // Create meeting folder structure (with or without .checkpoints/ subdirectory)
         let meeting_folder = create_meeting_folder(&base_folder, meeting_name, create_checkpoints)?;
