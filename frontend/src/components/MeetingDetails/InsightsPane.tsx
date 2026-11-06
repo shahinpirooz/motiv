@@ -1,32 +1,31 @@
 'use client';
 
-// Motiv: switches the right-hand pane between summary, action items and chat.
-// All stay mounted so switching keeps editor and chat state.
+// Motiv: switches the meeting's right-hand pane between summary and action
+// items. Both stay mounted so switching keeps editor state. Chat lives in the
+// app-wide assistant pane.
 
 import { useState, type ReactNode } from 'react';
-import { CheckSquare, MessageSquare, Sparkles } from 'lucide-react';
+import { CheckSquare, Sparkles } from 'lucide-react';
 
-export type InsightsView = 'summary' | 'actions' | 'chat';
+export type InsightsView = 'summary' | 'actions';
 
 interface InsightsPaneProps {
   summary: ReactNode;
   actions: ReactNode;
-  chat: ReactNode;
   initialView?: InsightsView;
 }
 
 const VIEWS = [
   { value: 'summary' as const, label: 'Summary', icon: Sparkles },
   { value: 'actions' as const, label: 'Actions', icon: CheckSquare },
-  { value: 'chat' as const, label: 'Chat', icon: MessageSquare },
 ];
 
-export function InsightsPane({ summary, actions, chat, initialView = 'summary' }: InsightsPaneProps) {
+export function InsightsPane({ summary, actions, initialView = 'summary' }: InsightsPaneProps) {
   const [view, setView] = useState<InsightsView>(initialView);
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
-      <div className="flex shrink-0 justify-center border-b border-gray-200 bg-white pt-2" role="tablist" aria-label="Summary, actions or chat">
+      <div className="flex shrink-0 justify-center border-b border-gray-200 bg-white pt-2" role="tablist" aria-label="Summary or actions">
         {VIEWS.map(({ value, label, icon: Icon }) => (
           <button
             key={value}
@@ -47,7 +46,6 @@ export function InsightsPane({ summary, actions, chat, initialView = 'summary' }
       </div>
       <div className={view === 'summary' ? 'flex flex-1 min-h-0' : 'hidden'}>{summary}</div>
       <div className={view === 'actions' ? 'flex flex-1 min-h-0' : 'hidden'}>{actions}</div>
-      <div className={view === 'chat' ? 'flex flex-1 min-h-0' : 'hidden'}>{chat}</div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import './globals.css'
 import { Source_Sans_3 } from 'next/font/google'
 import Sidebar from '@/components/Sidebar'
 import { SidebarProvider } from '@/components/Sidebar/SidebarProvider'
+import { AssistantPane } from '@/components/Assistant/AssistantPane'
 import MainContent from '@/components/MainContent'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
 import { Toaster, toast } from 'sonner'
@@ -254,6 +255,8 @@ export default function RootLayout({
                                 <div className="flex">
                                   <Sidebar />
                                   <MainContent>{children}</MainContent>
+                                  {/* Motiv: app-wide assistant chat */}
+                                  <AssistantPane />
                                 </div>
                               )}
                               {/* Import audio overlay and dialog */}

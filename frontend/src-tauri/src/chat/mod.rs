@@ -5,6 +5,9 @@
 //! transcript is sent when it fits the model's context; otherwise the most
 //! relevant transcript windows are picked by keyword overlap with the
 //! question. Messages are stored in `meeting_chat_messages`.
+//! `global` answers across all meetings.
+
+pub mod global;
 
 use crate::database::repositories::setting::SettingsRepository;
 use crate::ollama::metadata::ModelMetadataCache;
@@ -27,7 +30,7 @@ static METADATA_CACHE: LazyLock<ModelMetadataCache> =
 /// Tokens kept free for instructions, chat history and the answer.
 const RESERVED_TOKENS: usize = 1500;
 /// Most recent chat turns sent back to the model as conversation context.
-const MAX_HISTORY_TURNS: usize = 8;
+pub(crate) const MAX_HISTORY_TURNS: usize = 8;
 /// Context budget for cloud providers (they all accept far more than this).
 const CLOUD_CONTEXT_TOKENS: usize = 100_000;
 /// Transcript lines per retrieval window when the transcript must be trimmed.
@@ -93,7 +96,7 @@ const STOPWORDS: &[&str] = &[
     "about", "any", "all", "said", "say", "says", "meeting", "tell",
 ];
 
-fn keywords(text: &str) -> HashSet<String> {
+pub(crate) fn keywords(text: &str) -> HashSet<String> {
     text.split(|c: char| !c.is_alphanumeric())
         .map(|w| w.to_lowercase())
         .filter(|w| w.chars().count() > 2 && !STOPWORDS.contains(&w.as_str()))
@@ -309,6 +312,34 @@ pub(crate) async fn context_budget(settings: &ProviderSettings, model_name: &str
     window.saturating_sub(RESERVED_TOKENS).max(500)
 }
 
+/// Provider and model to use: the ones passed in, or else the summary model
+/// configured in Settings.
+pub(crate) async fn resolve_model(
+    pool: &SqlitePool,
+    model: Option<String>,
+    model_name: Option<String>,
+) -> Result<(String, String), String> {
+    let given = |o: &Option<String>| o.as_deref().map(str::trim).filter(|s| !s.is_empty()).map(str::to_string);
+    if let (Some(p), Some(m)) = (given(&model), given(&model_name)) {
+        return Ok((p, m));
+    }
+    let not_set = "Choose a summary model in Settings first.";
+    let config = SettingsRepository::get_model_config(pool)
+        .await
+        .map_err(|e| format!("Failed to read model settings: {}", e))?
+        .ok_or(not_set)?;
+    let mut name = config.model.clone();
+    if config.provider == "custom-openai" {
+        if let Ok(Some(c)) = SettingsRepository::get_custom_openai_config(pool).await {
+            name = c.model;
+        }
+    }
+    if config.provider.trim().is_empty() || name.trim().is_empty() {
+        return Err(not_set.into());
+    }
+    Ok((config.provider, name))
+}
+
 // ---------------------------------------------------------------------------
 // Database
 // ---------------------------------------------------------------------------
@@ -403,14 +434,15 @@ pub async fn api_chat_with_meeting<R: Runtime>(
     state: tauri::State<'_, AppState>,
     meeting_id: String,
     question: String,
-    model: String,
-    model_name: String,
+    model: Option<String>,
+    model_name: Option<String>,
 ) -> Result<Vec<ChatMessage>, String> {
     let question = question.trim().to_string();
     if question.is_empty() {
         return Err("Question is empty".into());
     }
     let pool = state.db_manager.pool().clone();
+    let (model, model_name) = resolve_model(&pool, model, model_name).await?;
 
     let (title, segments) = load_meeting(&pool, &meeting_id).await?;
     let lines = transcript_lines(&segments);
