@@ -216,6 +216,9 @@ export function useRecordingStart(
           console.log('Auto-starting recording from navigation...');
           setIsAutoStarting(true);
           sessionStorage.removeItem('autoStartRecording'); // Clear the flag
+          // Motiv: meeting awareness may pass the meeting's name along.
+          const suppliedTitle = sessionStorage.getItem('autoStartMeetingTitle')?.trim();
+          sessionStorage.removeItem('autoStartMeetingTitle');
 
           // Check the selected transcription model before starting.
           const modelReady = await checkModelReady();
@@ -242,8 +245,8 @@ export function useRecordingStart(
 
           // Start the actual backend recording
           try {
-            // Generate meeting title
-            const generatedMeetingTitle = generateMeetingTitle();
+            // Generate meeting title (Motiv: meeting awareness may supply one)
+            const generatedMeetingTitle = suppliedTitle || generateMeetingTitle();
 
             // Set STARTING status before initiating backend recording
             setStatus(RecordingStatus.STARTING, 'Initializing recording...');

@@ -3674,6 +3674,7 @@ dependencies = [
  "chrono",
  "cidre",
  "clap 4.6.1",
+ "core-foundation 0.9.4",
  "core-graphics 0.23.2",
  "cpal",
  "criterion",
@@ -3734,6 +3735,7 @@ dependencies = [
  "whatlang",
  "which 6.0.3",
  "whisper-rs",
+ "windows-sys 0.59.0",
  "xz2",
  "zip 2.4.2",
 ]

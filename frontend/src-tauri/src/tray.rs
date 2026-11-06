@@ -117,6 +117,31 @@ fn toggle_recording_handler<R: Runtime>(app: &AppHandle<R>) {
     });
 }
 
+/// Motiv: starts recording the same way the tray does (the home page picks
+/// up the flag), optionally with a meeting title. Used by meeting awareness.
+pub(crate) fn request_start_recording<R: Runtime>(app: &AppHandle<R>, title: Option<String>) {
+    focus_main_window(app);
+    set_tray_state(app, RecordingState::Starting);
+    if let Some(window) = app.get_webview_window("main") {
+        let title_js = match title {
+            Some(t) => format!(
+                "sessionStorage.setItem('autoStartMeetingTitle', {});",
+                serde_json::to_string(&t).unwrap_or_else(|_| "''".into())
+            ),
+            None => "sessionStorage.removeItem('autoStartMeetingTitle');".to_string(),
+        };
+        let _ = window.eval(&format!(
+            "{} sessionStorage.setItem('autoStartRecording', 'true'); window.location.assign('/');",
+            title_js
+        ));
+    }
+}
+
+/// Motiv: stops recording the same way the tray's Stop item does.
+pub(crate) fn request_stop_recording<R: Runtime>(app: &AppHandle<R>) {
+    stop_recording_handler(app);
+}
+
 fn pause_recording_handler<R: Runtime>(app: &AppHandle<R>) {
     // Immediately show pausing state
     set_tray_state(app, RecordingState::Pausing);

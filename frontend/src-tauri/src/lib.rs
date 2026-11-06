@@ -52,6 +52,7 @@ pub mod openrouter;
 pub mod parakeet_engine;
 pub mod chat; // Motiv: chat with a meeting
 pub mod insights; // Motiv: action items and highlights
+pub mod meeting_watch; // Motiv: Zoom/Teams/Meet awareness
 pub mod rich_export; // fork: rich-text export / email
 pub mod state;
 pub mod summary;
@@ -633,6 +634,9 @@ pub fn run() {
                 log::error!("Failed to create system tray: {}", e);
             }
 
+            // Motiv: watch for Zoom / Teams / Google Meet calls
+            meeting_watch::start(_app.handle().clone());
+
             // Initialize notification system with proper defaults
             log::info!("Initializing notification system...");
             let app_for_notif = _app.handle().clone();
@@ -865,6 +869,10 @@ pub fn run() {
             insights::api_get_meeting_insights,
             insights::api_generate_meeting_insights,
             insights::api_set_action_item_done,
+            meeting_watch::meeting_watch_get_settings,
+            meeting_watch::meeting_watch_save_settings,
+            meeting_watch::meeting_watch_current,
+            meeting_watch::meeting_prompt_respond,
             // Custom OpenAI commands
             api::api_save_custom_openai_config,
             api::api_get_custom_openai_config,
