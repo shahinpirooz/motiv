@@ -35,12 +35,15 @@ export function About() {
             setUpdateInfo(info);
             if (info.available) {
                 setShowUpdateDialog(true);
+            } else if (info.noReleases) {
+                toast.success(`You're on Motiv ${info.currentVersion}`, { description: 'No releases have been published yet.' });
             } else {
-                toast.success('You are running the latest version');
+                toast.success(`You're up to date (Motiv ${info.currentVersion})`);
             }
         } catch (error: any) {
             console.error('Failed to check for updates:', error);
-            toast.error('Failed to check for updates: ' + (error.message || 'Unknown error'));
+            const message = typeof error === 'string' ? error : error?.message;
+            toast.error('Could not check for updates', { description: message || 'Check your internet connection and try again.' });
         } finally {
             setIsChecking(false);
         }

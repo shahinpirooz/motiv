@@ -1,12 +1,12 @@
 /**
- * Update Service
+ * Update Service (Motiv)
  *
- * Handles automatic software updates using Tauri updater plugin.
- * Provides update checking, downloading, and installation functionality.
+ * Checks the latest GitHub release of the Motiv repo (Rust:
+ * `motiv_latest_release`). Builds aren't signed for automatic installation,
+ * so an available update links to its release page.
  */
 
-import { check, Update } from '@tauri-apps/plugin-updater';
-import { relaunch } from '@tauri-apps/plugin-process';
+import { invoke } from '@tauri-apps/api/core';
 import { getVersion } from '@tauri-apps/api/app';
 
 export interface UpdateInfo {
@@ -15,122 +15,68 @@ export interface UpdateInfo {
   version?: string;
   date?: string;
   body?: string;
+  /** Release page with the downloads. */
   downloadUrl?: string;
+  /** No release has been published yet. */
+  noReleases?: boolean;
 }
 
-export interface UpdateProgress {
-  downloaded: number;
-  total: number;
-  percentage: number;
+interface LatestRelease {
+  version: string;
+  url: string;
+  notes: string | null;
+  published_at: string | null;
 }
 
-/**
- * Update Service
- * Singleton service for managing app updates
- */
+/** True when `latest` (e.g. "0.8.0" or "v0.8.0") is newer than `current`. */
+export function isNewer(latest: string, current: string): boolean {
+  const parse = (v: string) => v.trim().replace(/^v/i, '').split(/[-+]/)[0].split('.').map((n) => parseInt(n, 10) || 0);
+  const [a, b] = [parse(latest), parse(current)];
+  for (let i = 0; i < 3; i++) {
+    if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  }
+  return false;
+}
+
 export class UpdateService {
   private updateCheckInProgress = false;
   private lastCheckTime: number | null = null;
   private readonly CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-  /**
-   * Check for available updates
-   * @param force Force check even if recently checked
-   * @returns Promise with update information
-   */
   async checkForUpdates(force = false): Promise<UpdateInfo> {
-    // Prevent concurrent update checks
+    const currentVersion = await getVersion();
     if (this.updateCheckInProgress) {
-      throw new Error('Update check already in progress');
+      return { available: false, currentVersion };
     }
-
-    // Skip if checked recently (unless forced)
-    if (!force && this.lastCheckTime) {
-      const timeSinceLastCheck = Date.now() - this.lastCheckTime;
-      if (timeSinceLastCheck < this.CHECK_INTERVAL_MS) {
-        console.log('Skipping update check - checked recently');
-        return {
-          available: false,
-          currentVersion: await getVersion(),
-        };
-      }
+    if (!force && this.wasCheckedRecently()) {
+      return { available: false, currentVersion };
     }
-
     this.updateCheckInProgress = true;
     this.lastCheckTime = Date.now();
-
     try {
-      const currentVersion = await getVersion();
-      const update = await check();
-
-      if (update?.available) {
-        return {
-          available: true,
-          currentVersion,
-          version: update.version,
-          date: update.date,
-          body: update.body,
-        };
-      }
-
+      const latest = await invoke<LatestRelease | null>('motiv_latest_release');
+      if (!latest) return { available: false, currentVersion, noReleases: true };
       return {
-        available: false,
+        available: isNewer(latest.version, currentVersion),
         currentVersion,
+        version: latest.version,
+        date: latest.published_at ?? undefined,
+        body: latest.notes ?? undefined,
+        downloadUrl: latest.url,
       };
-    } catch (error) {
-      console.error('Failed to check for updates:', error);
-      throw error;
     } finally {
       this.updateCheckInProgress = false;
     }
   }
 
-  /**
-   * Download and install the available update
-   * @param update The update object from checkForUpdates
-   * @param onProgress Optional progress callback
-   * @returns Promise that resolves when download completes
-   */
-  async downloadAndInstall(
-    update: Update,
-    onProgress?: (progress: UpdateProgress) => void
-  ): Promise<void> {
-    try {
-      // Download the update
-      await update.download();
-
-      // Notify progress if callback provided
-      if (onProgress) {
-        onProgress({ downloaded: 100, total: 100, percentage: 100 });
-      }
-
-      // Install and relaunch
-      await update.install();
-      await relaunch();
-    } catch (error) {
-      console.error('Failed to download/install update:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get the current app version
-   * @returns Promise with version string
-   */
   async getCurrentVersion(): Promise<string> {
     return getVersion();
   }
 
-  /**
-   * Check if an update check was performed recently
-   * @returns true if checked within the interval
-   */
   wasCheckedRecently(): boolean {
     if (!this.lastCheckTime) return false;
-    const timeSinceLastCheck = Date.now() - this.lastCheckTime;
-    return timeSinceLastCheck < this.CHECK_INTERVAL_MS;
+    return Date.now() - this.lastCheckTime < this.CHECK_INTERVAL_MS;
   }
 }
 
-// Export singleton instance
 export const updateService = new UpdateService();

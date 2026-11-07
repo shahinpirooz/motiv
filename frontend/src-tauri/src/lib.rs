@@ -58,6 +58,7 @@ pub mod vocabulary; // Motiv: names and terms spelled correctly
 pub mod accounts; // Motiv: Microsoft 365 / Google sign-in
 pub mod calendar; // Motiv: calendar events and participants
 pub mod speakers; // Motiv: speaker identification and voiceprints
+pub mod updates; // Motiv: update check against GitHub releases
 pub mod rich_export; // fork: rich-text export / email
 pub mod state;
 pub mod summary;
@@ -589,7 +590,8 @@ pub fn run() {
         .manage(summary::summary_engine::ModelManagerState(Arc::new(tokio::sync::Mutex::new(None))))
         .setup(|_app| {
             let verbose = cfg!(debug_assertions)
-                || std::env::var("MEETILY_DEBUG_LOG")
+                || std::env::var("MOTIV_DEBUG_LOG")
+                    .or_else(|_| std::env::var("MEETILY_DEBUG_LOG")) // older name
                     .map(|value| value == "1" || value.eq_ignore_ascii_case("true"))
                     .unwrap_or(false);
             let app_data_dir = _app.path().app_data_dir().ok();
@@ -906,6 +908,7 @@ pub fn run() {
             speakers::speakers_set_segment,
             speakers::voice_profiles_list,
             speakers::voice_profiles_delete,
+            updates::motiv_latest_release,
             // Custom OpenAI commands
             api::api_save_custom_openai_config,
             api::api_get_custom_openai_config,
