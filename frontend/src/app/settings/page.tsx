@@ -14,6 +14,7 @@ import { MeetingAwarenessSettings } from '@/components/MeetingAwarenessSettings'
 import { StorageSettings } from '@/components/StorageSettings';
 import { VocabularySettings } from '@/components/VocabularySettings';
 import { AccountsSettings } from '@/components/AccountsSettings';
+import { VoiceprintSettings } from '@/components/VoiceprintSettings';
 import { useConfig } from '@/contexts/ConfigContext';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
@@ -125,6 +126,7 @@ export default function SettingsPage() {
             </TabsContent>
             <TabsContent value="meetings" className="mt-6">
               <MeetingAwarenessSettings />
+              <VoiceprintSettings />
             </TabsContent>
             <TabsContent value="storage" className="mt-6">
               <StorageSettings />

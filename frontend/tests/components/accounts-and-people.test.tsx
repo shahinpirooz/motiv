@@ -15,6 +15,8 @@ mock.module("sonner", () => ({
     error: (m: string, o?: any) => toasts.push(`err:${m}:${o?.description ?? ""}`),
   },
 }));
+mock.module("@tauri-apps/api/event", () => ({ listen: async () => () => {} }));
+(globalThis as any).window = (globalThis as any).window ?? { addEventListener() {}, removeEventListener() {}, dispatchEvent() { return true; } };
 mock.module("@tauri-apps/api/core", () => ({
   invoke: async (cmd: string, args: any) => {
     invokes.push({ cmd, args });
@@ -27,6 +29,7 @@ mock.module("@tauri-apps/api/core", () => ({
       }
       case "accounts_disconnect": status = status.map((s) => (s.provider === args.provider ? { ...s, connected: false } : s)); return null;
       case "calendar_for_meeting": return calendar;
+      case "speakers_get": return { analyzed: false, speakers: [], assignments: [] };
       case "calendar_set_meeting_event": return args.event ? { meeting_id: args.meetingId, event: args.event, attendance: null, source: "manual" } : null;
       case "calendar_refresh_attendance":
         if (attendanceError) throw attendanceError;

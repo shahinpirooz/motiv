@@ -5,6 +5,7 @@ import { TranscriptView } from '@/components/TranscriptView';
 import { VirtualizedTranscriptView } from '@/components/VirtualizedTranscriptView';
 import { TranscriptButtonGroup } from './TranscriptButtonGroup';
 import { useMemo } from 'react';
+import { useMeetingSpeakers } from '@/hooks/useMeetingSpeakers';
 
 interface TranscriptPanelProps {
   transcripts: Transcript[];
@@ -50,19 +51,26 @@ export function TranscriptPanel({
   onRefetchTranscripts,
 }: TranscriptPanelProps) {
   // Convert transcripts to segments if pagination is not used but we want virtualization
+  // Motiv: speaker names, when speakers have been identified
+  const { byTranscript } = useMeetingSpeakers(meetingId);
+
   const convertedSegments = useMemo(() => {
-    if (usePagination && segments) {
-      return segments;
-    }
-    // Convert transcripts to segments for virtualization
-    return transcripts.map(t => ({
-      id: t.id,
-      timestamp: t.audio_start_time ?? 0,
-      endTime: t.audio_end_time,
-      text: t.text,
-      confidence: t.confidence,
-    }));
-  }, [transcripts, usePagination, segments]);
+    const base: TranscriptSegmentData[] = usePagination && segments
+      ? segments
+      // Convert transcripts to segments for virtualization
+      : transcripts.map(t => ({
+          id: t.id,
+          timestamp: t.audio_start_time ?? 0,
+          endTime: t.audio_end_time,
+          text: t.text,
+          confidence: t.confidence,
+        }));
+    if (byTranscript.size === 0) return base;
+    return base.map(s => {
+      const sp = byTranscript.get(s.id);
+      return sp ? { ...s, speaker: sp.label, speakerColor: sp.color } : s;
+    });
+  }, [transcripts, usePagination, segments, byTranscript]);
 
   return (
     <div className="flex h-full min-w-0 w-full bg-white flex-col relative @container">

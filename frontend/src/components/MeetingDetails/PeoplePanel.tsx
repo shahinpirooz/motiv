@@ -8,6 +8,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
 import { CalendarDays, Loader2, RefreshCw, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SpeakersSection, type Participant } from './SpeakersSection';
 
 export interface Attendee { name: string; email: string; response: string }
 export interface Person { name: string; email: string }
@@ -47,6 +48,20 @@ export function formatRange(start: string, end: string): string {
 export function minutes(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
   return `${Math.round(seconds / 60)} min`;
+}
+
+/** Attendees (or invitees and organizer) as name suggestions for speakers. */
+export function participantsOf(link: MeetingLink | null): Participant[] {
+  if (!link) return [];
+  const out: Participant[] = [];
+  const add = (name: string, email?: string | null) => {
+    const label = name?.trim() || (email ? email.split('@')[0] : '');
+    if (label && !out.some((p) => p.name.toLowerCase() === label.toLowerCase())) out.push({ name: label, email: email ?? null });
+  };
+  if (link.attendance) link.attendance.forEach((a) => add(a.name, a.email));
+  if (link.event.organizer) add(link.event.organizer.name, link.event.organizer.email);
+  link.event.attendees.filter((a) => a.response !== 'declined').forEach((a) => add(a.name, a.email));
+  return out;
 }
 
 export function PeoplePanel({ meetingId }: { meetingId: string }) {
@@ -98,9 +113,14 @@ export function PeoplePanel({ meetingId }: { meetingId: string }) {
   }
   if (!data?.connected) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center text-gray-500" data-testid="people-panel">
-        <Users className="mb-3 h-8 w-8 text-gray-300" />
-        <p className="text-sm">Connect Microsoft 365 or Google in Settings &gt; Accounts to see who was in this meeting.</p>
+      <div className="flex h-full min-h-0 w-full flex-col bg-white" data-testid="people-panel">
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-6 text-sm">
+          <SpeakersSection meetingId={meetingId} participants={[]} />
+          <div className="flex items-start gap-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-600">
+            <Users className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+            Connect Microsoft 365 or Google in Settings &gt; Accounts to see who was invited and suggest their names here.
+          </div>
+        </div>
       </div>
     );
   }
@@ -109,6 +129,7 @@ export function PeoplePanel({ meetingId }: { meetingId: string }) {
   const ev = link?.event;
   const selected = ev ? `${ev.provider}:${ev.id}` : '';
   const options = [...data.candidates];
+  const participants: Participant[] = participantsOf(link);
   if (ev && !options.some((c) => c.provider === ev.provider && c.id === ev.id)) options.unshift(ev);
 
   return (
@@ -141,6 +162,8 @@ export function PeoplePanel({ meetingId }: { meetingId: string }) {
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 space-y-6 text-sm">
+        <SpeakersSection meetingId={meetingId} participants={participants} />
+
         {!ev && <p className="text-gray-500">No calendar event overlaps this recording. Pick one above if it belongs to a meeting.</p>}
 
         {ev && ev.platform === 'teams' && ev.provider === 'microsoft' && (

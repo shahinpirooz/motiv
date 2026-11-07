@@ -71,6 +71,8 @@ const TranscriptSegment = memo(function TranscriptSegment({
     confidence,
     isStreaming,
     showConfidence,
+    speaker,
+    speakerColor,
 }: {
     id: string;
     timestamp: number;
@@ -78,6 +80,9 @@ const TranscriptSegment = memo(function TranscriptSegment({
     confidence?: number;
     isStreaming: boolean;
     showConfidence: boolean;
+    /** Motiv: shown when the speaker changes from the previous segment */
+    speaker?: string;
+    speakerColor?: string;
 }) {
     const displayText = cleanStopWords(text) || (text.trim() === '' ? '[Silence]' : text);
 
@@ -97,6 +102,12 @@ const TranscriptSegment = memo(function TranscriptSegment({
                     </TooltipContent>
                 </Tooltip>
                 <div className="flex-1">
+                    {speaker && (
+                        <div className="mb-0.5 flex items-center gap-1.5 text-xs font-semibold" style={{ color: speakerColor }}>
+                            <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: speakerColor }} />
+                            {speaker}
+                        </div>
+                    )}
                     {isStreaming ? (
                         <div className="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2">
                             <p className="text-base text-gray-800 leading-relaxed">{displayText}</p>
@@ -275,6 +286,7 @@ export const VirtualizedTranscriptView: React.FC<VirtualizedTranscriptViewProps>
                         {virtualizer.getVirtualItems().map((virtualRow) => {
                             const segment = segments[virtualRow.index];
                             const isStreaming = streamingSegmentId === segment.id;
+                            const showSpeaker = segment.speaker && segment.speaker !== segments[virtualRow.index - 1]?.speaker;
 
                             return (
                                 <div
@@ -296,6 +308,8 @@ export const VirtualizedTranscriptView: React.FC<VirtualizedTranscriptViewProps>
                                         confidence={segment.confidence}
                                         isStreaming={isStreaming}
                                         showConfidence={showConfidence}
+                                        speaker={showSpeaker ? segment.speaker : undefined}
+                                        speakerColor={segment.speakerColor}
                                     />
                                 </div>
                             );
@@ -335,8 +349,9 @@ export const VirtualizedTranscriptView: React.FC<VirtualizedTranscriptViewProps>
                 // Simple rendering for small lists (better animations)
                 <>
                     <div className="space-y-1">
-                        {segments.map((segment) => {
+                        {segments.map((segment, index) => {
                             const isStreaming = streamingSegmentId === segment.id;
+                            const showSpeaker = segment.speaker && segment.speaker !== segments[index - 1]?.speaker;
 
                             return (
                                 <motion.div
@@ -352,6 +367,8 @@ export const VirtualizedTranscriptView: React.FC<VirtualizedTranscriptViewProps>
                                         confidence={segment.confidence}
                                         isStreaming={isStreaming}
                                         showConfidence={showConfidence}
+                                        speaker={showSpeaker ? segment.speaker : undefined}
+                                        speakerColor={segment.speakerColor}
                                     />
                                 </motion.div>
                             );

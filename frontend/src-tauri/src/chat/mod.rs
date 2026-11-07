@@ -51,6 +51,8 @@ pub struct Segment {
     pub text: String,
     pub timestamp: String,
     pub audio_start_time: Option<f64>,
+    /// Speaker name when speakers have been identified.
+    pub speaker: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -79,10 +81,11 @@ pub fn transcript_lines(segments: &[Segment]) -> Vec<String> {
                 Some(t) => format_offset(t),
                 None => s.timestamp.trim().to_string(),
             };
+            let who = s.speaker.as_deref().map(|n| format!("{}: ", n)).unwrap_or_default();
             if time.is_empty() {
-                s.text.trim().to_string()
+                format!("{}{}", who, s.text.trim())
             } else {
-                format!("[{}] {}", time, s.text.trim())
+                format!("[{}] {}{}", time, who, s.text.trim())
             }
         })
         .collect()
@@ -384,17 +387,23 @@ pub(crate) async fn load_meeting(pool: &SqlitePool, meeting_id: &str) -> Result<
         .await
         .map_err(|e| format!("Failed to load meeting: {}", e))?;
     let (title,) = title.ok_or("Meeting not found")?;
-    let rows = sqlx::query_as::<_, (String, String, Option<f64>)>(
-        "SELECT transcript, timestamp, audio_start_time FROM transcripts
+    let rows = sqlx::query_as::<_, (String, String, Option<f64>, Option<String>)>(
+        "SELECT transcript, timestamp, audio_start_time, speaker FROM transcripts
          WHERE meeting_id = ? ORDER BY COALESCE(audio_start_time, 0), timestamp, rowid",
     )
     .bind(meeting_id)
     .fetch_all(pool)
     .await
     .map_err(|e| format!("Failed to load transcript: {}", e))?;
+    let names = crate::speakers::speaker_names(pool, meeting_id).await;
     let segments = rows
         .into_iter()
-        .map(|(text, timestamp, audio_start_time)| Segment { text, timestamp, audio_start_time })
+        .map(|(text, timestamp, audio_start_time, speaker)| Segment {
+            text,
+            timestamp,
+            audio_start_time,
+            speaker: speaker.and_then(|k| names.get(&k).cloned()),
+        })
         .collect();
     Ok((title, segments))
 }
@@ -493,7 +502,7 @@ mod tests {
     use super::*;
 
     fn seg(text: &str, t: Option<f64>) -> Segment {
-        Segment { text: text.into(), timestamp: "10:00:00".into(), audio_start_time: t }
+        Segment { text: text.into(), timestamp: "10:00:00".into(), audio_start_time: t, speaker: None }
     }
 
     #[test]
@@ -501,6 +510,13 @@ mod tests {
         assert_eq!(format_offset(5.4), "0:05");
         assert_eq!(format_offset(754.0), "12:34");
         assert_eq!(format_offset(3725.0), "1:02:05");
+    }
+
+    #[test]
+    fn lines_include_speaker_names() {
+        let mut s = seg("we ship friday", Some(5.0));
+        s.speaker = Some("Priya".into());
+        assert_eq!(transcript_lines(&[s]), vec!["[0:05] Priya: we ship friday".to_string()]);
     }
 
     #[test]

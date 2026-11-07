@@ -57,6 +57,7 @@ pub mod storage; // Motiv: recordings folder and expiration
 pub mod vocabulary; // Motiv: names and terms spelled correctly
 pub mod accounts; // Motiv: Microsoft 365 / Google sign-in
 pub mod calendar; // Motiv: calendar events and participants
+pub mod speakers; // Motiv: speaker identification and voiceprints
 pub mod rich_export; // fork: rich-text export / email
 pub mod state;
 pub mod summary;
@@ -898,6 +899,13 @@ pub fn run() {
             calendar::calendar_for_meeting,
             calendar::calendar_set_meeting_event,
             calendar::calendar_refresh_attendance,
+            speakers::speakers_analyze,
+            speakers::speakers_get,
+            speakers::speakers_rename,
+            speakers::speakers_merge,
+            speakers::speakers_set_segment,
+            speakers::voice_profiles_list,
+            speakers::voice_profiles_delete,
             // Custom OpenAI commands
             api::api_save_custom_openai_config,
             api::api_get_custom_openai_config,

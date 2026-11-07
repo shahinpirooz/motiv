@@ -495,6 +495,15 @@ impl SummaryService {
             info!("📝 Detected transcript summary language: {}", code);
         }
 
+        // Motiv: when speakers have been identified, summarise the
+        // speaker-labelled transcript ("[1:05] Priya: ...") instead.
+        let text = match crate::chat::load_meeting(&pool, &meeting_id).await {
+            Ok((_, segments)) if segments.iter().any(|s| s.speaker.is_some()) => {
+                crate::chat::transcript_lines(&segments).join("\n")
+            }
+            _ => text,
+        };
+
         // Motiv: tell the model who was in the meeting (from the calendar)
         let custom_prompt = match crate::calendar::participants_for_prompt(&pool, &meeting_id).await {
             Some(note) if custom_prompt.trim().is_empty() => note,

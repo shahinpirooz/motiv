@@ -149,8 +149,9 @@ async fn recent_meetings(pool: &SqlitePool, limit: i64) -> Result<Vec<MeetingInf
 }
 
 async fn meeting_segments(pool: &SqlitePool, meeting_id: &str) -> Result<Vec<(String, Segment)>, String> {
-    let rows = sqlx::query_as::<_, (String, String, String, Option<f64>)>(
-        "SELECT id, transcript, timestamp, audio_start_time FROM transcripts
+    let names = crate::speakers::speaker_names(pool, meeting_id).await;
+    let rows = sqlx::query_as::<_, (String, String, String, Option<f64>, Option<String>)>(
+        "SELECT id, transcript, timestamp, audio_start_time, speaker FROM transcripts
          WHERE meeting_id = ? ORDER BY COALESCE(audio_start_time, 0), timestamp, rowid",
     )
     .bind(meeting_id)
@@ -159,8 +160,10 @@ async fn meeting_segments(pool: &SqlitePool, meeting_id: &str) -> Result<Vec<(St
     .map_err(|e| format!("Failed to load transcript: {}", e))?;
     Ok(rows
         .into_iter()
-        .filter(|(_, t, _, _)| !t.trim().is_empty())
-        .map(|(id, text, timestamp, audio_start_time)| (id, Segment { text, timestamp, audio_start_time }))
+        .filter(|(_, t, _, _, _)| !t.trim().is_empty())
+        .map(|(id, text, timestamp, audio_start_time, speaker)| {
+            (id, Segment { text, timestamp, audio_start_time, speaker: speaker.and_then(|k| names.get(&k).cloned()) })
+        })
         .collect())
 }
 
