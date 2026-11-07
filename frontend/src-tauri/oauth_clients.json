@@ -1,5 +1,5 @@
 {
-  "_comment": "Motiv's built-in OAuth app registrations (public client IDs, not secrets). Fill these in once; users then just click Connect. See docs/CALENDAR_SETUP.md. A Google Desktop-app client secret is not confidential and belongs here too.",
+  "_comment": "Template only; keep it empty in git. Put the real values in oauth_clients.local.json next to this file (git-ignored), or set MOTIV_MS_CLIENT_ID, MOTIV_MS_TENANT, MOTIV_GOOGLE_CLIENT_ID and MOTIV_GOOGLE_CLIENT_SECRET when building. See docs/CALENDAR_SETUP.md.",
   "microsoft": {
     "client_id": "",
     "tenant": "common"

@@ -2,7 +2,7 @@
 
 Motiv has no account or server. To read a calendar it signs in to Microsoft or Google in the browser and keeps the sign-in in the computer's keychain (macOS Keychain, Windows Credential Manager). Motiv only reads; nothing is written to anyone's calendar or mailbox.
 
-For that, Microsoft and Google each need to know about the app: an **app registration**. The publisher of Motiv creates **one** of each, puts the IDs in [`frontend/src-tauri/oauth_clients.json`](../frontend/src-tauri/oauth_clients.json), and every copy of Motiv built from the repo uses them. **People using Motiv don't register anything; they click Connect.**
+For that, Microsoft and Google each need to know about the app: an **app registration**. The publisher of Motiv creates **one** of each and builds the IDs into the app (from a local, git-ignored file). **People using Motiv don't register anything; they click Connect.**
 
 - [For people using Motiv](#for-people-using-motiv)
 - [One-time setup for the publisher](#one-time-setup-for-the-publisher)
@@ -62,7 +62,7 @@ Uses your **personal** Microsoft and Google accounts; no company is involved. Ab
 
 ### Build the IDs into Motiv
 
-Edit `frontend/src-tauri/oauth_clients.json`:
+Put the values in **`frontend/src-tauri/oauth_clients.local.json`** (create it next to `oauth_clients.json`). Git ignores this file, so the values never land in the repo:
 
 ```json
 {
@@ -71,7 +71,9 @@ Edit `frontend/src-tauri/oauth_clients.json`:
 }
 ```
 
-Commit it and rebuild. These values identify the app and are not secrets: a desktop app's client ID ships inside the app anyway, and Google treats a Desktop client's "secret" as non-confidential. The sign-in itself is protected by PKCE.
+Rebuild. The build merges, in order: the committed template `oauth_clients.json` (keep it empty), then `oauth_clients.local.json`, then these environment variables if set (handy for CI or a Windows build machine): `MOTIV_MS_CLIENT_ID`, `MOTIV_MS_TENANT`, `MOTIV_GOOGLE_CLIENT_ID`, `MOTIV_GOOGLE_CLIENT_SECRET`. The build prints a warning when a provider has no client ID.
+
+The values do end up inside the built app; that's unavoidable for desktop apps, and Google treats a Desktop client's "secret" as non-confidential. The sign-in itself is protected by PKCE. Keeping them out of git avoids GitHub secret-scanning blocks and stops others from casually reusing your registration.
 
 Microsoft's **publisher verification** (the blue "verified" badge that lets many organisations approve apps without an admin) requires a Microsoft business partner ID, so it isn't available to a personal publisher. That's why some work accounts will need their admin to approve Motiv.
 

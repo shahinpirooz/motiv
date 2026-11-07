@@ -78,7 +78,10 @@ pub fn parse_built_in(json: &str) -> (BuiltIn, BuiltIn) {
     (f.microsoft, f.google)
 }
 
-static BUILT_IN: LazyLock<(BuiltIn, BuiltIn)> = LazyLock::new(|| parse_built_in(include_str!("../../oauth_clients.json")));
+/// Merged at build time by build.rs from oauth_clients.json, the git-ignored
+/// oauth_clients.local.json, and MOTIV_* environment variables.
+static BUILT_IN: LazyLock<(BuiltIn, BuiltIn)> =
+    LazyLock::new(|| parse_built_in(include_str!(concat!(env!("OUT_DIR"), "/oauth_clients.json"))));
 
 pub fn built_in(p: Provider) -> &'static BuiltIn {
     match p {

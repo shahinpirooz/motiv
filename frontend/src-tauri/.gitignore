@@ -5,3 +5,6 @@
 
 Cargo.lock
 Cargo.toml.orig
+
+# Motiv: real OAuth app registration values (see docs/CALENDAR_SETUP.md)
+oauth_clients.local.json
