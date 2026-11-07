@@ -4,6 +4,11 @@ Motiv versions. Each feature release bumps the minor version
 (`scripts/fork/bump-version.sh X.Y.Z` updates every version field, commits
 and tags). Fixes bump the patch version.
 
+## 0.7.0 (2026-11-06)
+
+- **Speaker identification:** People tab > Identify speakers labels who said what (on-device model, downloaded once). Name speakers from the meeting's participants, merge split speakers, and the transcript, chat, action items and summaries use the names.
+- **Voiceprints (opt-in):** tick "Recognise this voice" to have Motiv name that person automatically in later meetings. Stored only on this computer; manage or delete them in Settings > Meetings.
+
 ## 0.6.0 (2026-11-06)
 
 - **Assistant pane:** chat on the right of every screen, about the open meeting or across all meetings, with links to the meetings it drew on (Cmd/Ctrl+J).
