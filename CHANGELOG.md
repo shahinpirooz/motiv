@@ -4,6 +4,11 @@ Motiv versions. Each feature release bumps the minor version
 (`scripts/fork/bump-version.sh X.Y.Z` updates every version field, commits
 and tags). Fixes bump the patch version.
 
+## 0.7.1 (2026-11-06)
+
+- **Check for Updates** works: it compares against the latest release on GitHub and links to its download page (or says none are published yet), instead of failing with "Unknown error".
+- Removed Meetily's screenshots, logos, docs and legacy backend; README, privacy policy and guides now describe Motiv. `MOTIV_DEBUG_LOG` / `MOTIV_LLAMA_HELPER` replace the `MEETILY_` variables (old names still work).
+
 ## 0.7.0 (2026-11-06)
 
 - **Speaker identification:** People tab > Identify speakers labels who said what (on-device model, downloaded once). Name speakers from the meeting's participants, merge split speakers, and the transcript, chat, action items and summaries use the names.
