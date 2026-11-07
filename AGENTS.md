@@ -1,28 +1,29 @@
-# Agent Guide for Meetily
+# Agent Guide for Motiv
 
 These instructions apply to AI coding agents working in this repository.
 
 ## Project Overview
 
-- Meetily is a desktop application for recording meetings, transcribing audio, and generating summaries.
+- Motiv is a desktop application for recording meetings, transcribing audio, and generating summaries, chat answers, action items and speaker labels. It began as a fork of Meetily Community Edition v0.5.0 (MIT) and is maintained independently.
 - The supported app lives in `frontend/`: Next.js/React provides the UI, and the Rust/Tauri core handles native behavior, audio, persistence, transcription, and summary orchestration.
 - Local transcription uses Whisper or Parakeet. Summaries use the configured local or cloud provider; do not assume every provider runs locally.
 - Frontend code invokes Tauri commands; Rust emits events that update frontend state. Preserve existing command contracts, event payloads, and state ownership.
-- `backend/` is an unsupported legacy archive, not a runtime dependency or a place to add new application behavior. Its FastAPI/CORS behavior is not a supported production API.
+- Motiv features live in their own Rust modules (`chat`, `insights`, `meeting_watch`, `storage`, `vocabulary`, `accounts`, `calendar`, `speakers`) with matching React components; prefer extending those over editing upstream-derived code.
 
 See [architecture and audio pipeline](docs/architecture.md), including [frontend/native communication](docs/architecture.md#frontend-and-native-communication) and [model management](docs/architecture.md#transcription-and-model-management).
 
 ## Development Commands
 
-Use pnpm 9.15.9. Run these commands from `frontend/`:
+Use pnpm 9.15.9. Run `pnpm install` from `frontend/` and the scripts from the repository root:
 
 Before running desktop dev/build commands, complete the [first-run sidecar setup](docs/BUILDING.md#first-run-sidecar-setup). Installing frontend dependencies alone does not stage `llama-helper`.
 
 | Command | Purpose |
 | --- | --- |
 | `pnpm install --frozen-lockfile` | Install the committed dependency set |
-| `pnpm run tauri:dev` | Run the full desktop app |
-| `pnpm run tauri:build` | Build the desktop app for production |
+| `scripts/fork/app.sh dev` (Windows: `scripts\fork\app.cmd dev`) | Run the full desktop app (builds the llama-helper sidecar) |
+| `scripts/fork/app.sh build` | Build the desktop app for production |
+| `scripts/fork/test-fork.sh` | Frontend tests (file by file) and TypeScript |
 
 Use the Tauri app for development and validation; a standalone Next.js server does not exercise native commands, audio, or permissions.
 
@@ -72,6 +73,6 @@ See [build and platform setup](docs/BUILDING.md), [development commands and debu
 
 ## Issues, PRs, and Authorization
 
-- When preparing an issue or PR, read and follow [CONTRIBUTING.md](CONTRIBUTING.md) for duplicate searches, coordination with existing work, branch targets, review expectations, and submission requirements. Local-only edits and investigations do not require a GitHub duplicate search.
+- Record user-visible changes in `CHANGELOG.md`; releases are cut with `scripts/fork/bump-version.sh X.Y.Z`.
 - Do not commit, push, create issues or PRs, or post comments without explicit user authorization for that action. Permission to edit locally is not permission to publish.
 - Before requesting publication authorization, provide related issue/PR links, a concise change explanation, verification results, and known limitations.

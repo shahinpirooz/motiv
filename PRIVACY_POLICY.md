@@ -1,127 +1,37 @@
-# Meetily Privacy Policy
+# Motiv privacy policy
 
-*Last updated: [Current Date]*
+_Last updated: 6 November 2026_
 
-## Our Privacy-First Commitment
+Motiv is a desktop app that runs on your computer. It has no user accounts, no servers and no analytics. The publisher of Motiv does not receive, store or have access to any of your data.
 
-Meetily is built on the principle that your meeting data should remain private and under your control. This privacy policy explains how we handle data in our open-source meeting assistant.
+## What stays on your computer
 
-## Data Processing Philosophy
+- **Audio recordings** of your meetings, in the folder you choose (Settings > Storage).
+- **Transcripts, summaries, chat conversations, action items** and meeting details, in a local database.
+- **Speaker information**: speaker labels and names for each meeting.
+- **Voiceprints**: created only when you tick "Recognise this voice" for a speaker. A voiceprint is a numeric representation of a voice used to recognise that person in later meetings. Voiceprints are biometric data; they are stored only in Motiv's local database, never uploaded, and can be deleted at any time in Settings > Meetings. Ask people for their consent before saving their voiceprint, as the law where you or they live may require it.
+- **Settings**, including Names & terms, and **calendar sign-ins** (stored in the macOS Keychain or Windows Credential Manager).
 
-### Local-First Processing
-- **Meeting transcription**: Processed entirely on your device using local Whisper models
-- **Audio recordings**: Never transmitted to external servers
-- **Meeting content**: Remains on your infrastructure
-- **AI summaries**: Generated locally or through your chosen LLM provider
+Transcription and speaker identification run entirely on your computer. Motiv downloads model files (for transcription, speaker identification and, if you choose it, the built-in summary engine) from public model repositories; those downloads send no personal data.
 
-### Your Data Ownership
-- You own all meeting data, transcripts, and recordings
-- Data is stored locally on your device
-- No vendor lock-in - export your data anytime
-- Complete control over data retention and deletion
+## What leaves your computer, and only when you choose
 
-## Usage Analytics
+- **Summary and chat providers.** If you choose a cloud provider (for example Anthropic Claude, OpenAI, Groq, OpenRouter or a custom endpoint), the transcript text of the meeting, your question, and participant names are sent to that provider to produce the answer, under that provider's terms and privacy policy. Audio is never sent. Local providers (Ollama, the built-in engine) keep everything on your computer.
+- **Calendars.** If you connect Microsoft 365 or Google, Motiv reads your calendar events (titles, times, organizer, attendees and their responses, meeting links) and, if you turn it on, Microsoft Teams attendance reports, directly from Microsoft or Google to your computer. Motiv only reads; it never creates, changes or deletes calendar data. This data is used only to name recordings, show who was in a meeting, and help the summary use correct names.
+- **Email.** If you use "Send by email", Motiv opens your own email app with the summary; nothing is sent until you send it.
 
-### What We Collect
-Usage analytics is optional and off by default. When you choose to enable it, Meetily collects minimal, anonymized usage data:
+## Google user data
 
-**Application Usage:**
-- Feature usage patterns (which tools you use most)
-- Session duration and frequency
-- Performance metrics (transcription success rates, error frequencies)
-- UI interaction patterns (button clicks, navigation flows)
+Motiv's use of information received from Google APIs adheres to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements. Motiv requests read-only access to Google Calendar (`calendar.readonly`) and your email address, uses it only for the features described above, does not transfer it to anyone, does not use it for advertising, and does not allow humans to read it.
 
-**Technical Metrics:**
-- Application version and platform information
-- Error logs and crash reports (anonymized)
-- Performance benchmarks (processing times, resource usage)
+## Deleting your data
 
-### What We DON'T Collect
-We never collect:
-- ❌ Meeting content, transcripts, or recordings
-- ❌ Personal information or identifiable data
-- ❌ File names, meeting titles, or metadata
-- ❌ Audio data or voice patterns
-- ❌ Participant names or contact information
-- ❌ LLM conversations or AI-generated content
+- Delete a meeting in Motiv to remove its transcript, summary, chat, speakers and calendar link.
+- Settings > Storage removes old recording audio automatically if you set a limit; you can also delete the recordings folder.
+- Settings > Meetings deletes voiceprints, one or all.
+- Settings > Accounts > Disconnect removes calendar sign-ins. To revoke access completely, also remove Motiv at https://myaccount.microsoft.com or https://myaccount.google.com/permissions.
+- Uninstalling Motiv and deleting its data folder (`~/Library/Application Support/com.pirooz.motiv` on macOS, `%APPDATA%\com.pirooz.motiv` on Windows) removes everything else.
 
-### Why We Collect This Data
-When enabled, analytics helps us with:
-- **Product Quality**: Identifying and fixing bugs that impact user experience
-- **Performance Optimization**: Understanding resource usage and system bottlenecks
-- **Security**: Detecting potential security issues and vulnerabilities
-- **Feature Development**: Making data-driven decisions about new features
-- **Open Source Sustainability**: Ensuring the project meets user needs effectively
+## Contact
 
-### Analytics Implementation
-- **Provider**: PostHog (privacy-focused analytics platform)
-- **Default**: Off by default; analytics starts only after you enable it in settings
-- **Anonymization**: All data linked to generated user IDs only - no personal identification
-- **Data retention**: 12 months maximum, then automatically deleted
-- **Encryption**: All data encrypted in transit using industry-standard protocols
-- **Location**: Data processed in accordance with PostHog's privacy policy
-- **Access Control**: Strictly limited to core development team members
-
-## Third-Party Services
-
-### LLM Providers (Optional)
-If you choose to use external LLM providers:
-- **Anthropic Claude**: Subject to Anthropic's privacy policy
-- **Groq**: Subject to Groq's privacy policy
-- **Local Ollama**: Processed entirely on your device
-
-### Analytics Service (Optional)
-- **PostHog**: Used for usage analytics when enabled
-- **Data**: Only anonymized usage patterns, no meeting content
-- **Control**: Completely optional, off by default, and user-controlled
-
-## Your Privacy Rights
-
-### Data Control
-- **Access**: View all data stored locally on your device
-- **Export**: Export your data in standard formats
-- **Delete**: Remove all data from your device
-
-
-### Analytics Transparency
-- **Open source**: Full analytics implementation available for review in our source code
-- **Opt-in**: New and existing installs have analytics disabled until you turn it on
-- **Questions**: Contact us for any analytics-related concerns
-
-## Data Security
-
-### Local Security
-- Data encrypted at rest using your device's security features
-- No transmission of sensitive meeting data
-- Standard file system permissions protect your data
-
-### Open Source Transparency
-- Full source code available for security review
-- Community-audited privacy implementations
-- No hidden data collection or tracking
-
-## Changes to This Policy
-
-We will notify users of any material changes to this privacy policy through:
-- Updates to this document in our GitHub repository
-- Release notes for application updates
-- In-app notifications for significant privacy changes
-
-## Contact Us
-
-For privacy-related questions or concerns:
-- **GitHub Issues**: [Create an issue](https://github.com/Zackriya-Solutions/meeting-minutes/issues)
-- **Email**: [Contact form](https://www.zackriya.com/service-interest-form/)
-- **Community**: [Discord](https://discord.gg/crRymMQBFH)
-
-## Open Source Commitment
-
-As an open-source project under MIT license, you can:
-- Review our complete privacy implementation
-- Modify data handling to meet your requirements
-- Deploy entirely on your own infrastructure
-- Contribute to privacy improvements
-
----
-
-*This privacy policy applies to Meetily v0.0.5 and later versions. For enterprise deployments, additional privacy controls may be available.*
+Questions about this policy: open an issue at https://github.com/shahinpirooz/motiv/issues.
